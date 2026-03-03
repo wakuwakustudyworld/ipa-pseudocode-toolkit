@@ -106,8 +106,11 @@ ipa-pseudocode-toolkit/
 
 ### 参照元
 
-IPAが公開している擬似言語の仕様書:
-https://www.ipa.go.jp/shiken/syllabus/nq6ept00000014lt-att/fe_pseudocode.pdf
+IPAが公開している擬似言語の仕様書（Ver.5.1、2024年4月試験から適用）:
+https://www.ipa.go.jp/shiken/syllabus/doe3um0000002djj-att/shiken_yougo_ver5_1.pdf
+
+- 別紙1: ITパスポート試験用
+- 別紙2: 基本情報技術者試験，応用情報技術者試験用（Ver.5.1でAP追加）
 
 ### 主要な特徴（Python との相違点）
 
@@ -115,15 +118,19 @@ https://www.ipa.go.jp/shiken/syllabus/nq6ept00000014lt-att/fe_pseudocode.pdf
 |----------|--------|
 | 配列の添字は **1始まり** | 0始まり |
 | `整数型: x` のような型宣言あり | 型宣言不要 |
-| `もし〜ならば〜を実行` | `if ... :` |
-| `繰り返し、〜を実行` | `while ... :` / `for ... :` |
-| `○○型の配列: data[5]` | `data = [None] * 5` |
-| `手続き` / `関数` | `def` |
-| `未定義` | `None` |
-| 論理演算: `かつ`, `または`, `でない` | `and`, `or`, `not` |
-| 整数除算: `÷`（切捨て） | `//` |
-| 剰余: `mod` | `%` |
+| `if (条件式) ... elseif ... else ... endif` | `if ... : elif ... : else:` |
+| `while (条件式) ... endwhile` | `while ... :` |
+| `do ... while (条件式)` | （対応構文なし） |
+| `for (制御記述) ... endfor` | `for ... :` |
+| `○手続名又は関数名` | `def` |
+| `変数名 ← 式` | `変数名 = 式` |
+| `未定義` / `未定義の値` | `None` |
+| 論理演算: `and`, `or`, `not` | `and`, `or`, `not` |
+| 乗除: `×`, `÷`, `mod` | `*`, `/` or `//`, `%` |
+| 関係: `＝`, `≠`, `＜`, `＞`, `≦`, `≧` | `==`, `!=`, `<`, `>`, `<=`, `>=` |
+| メンバアクセス: `.`（FE/AP用） | `.` |
 | 文字列結合: `+` | `+` |
+| `true`, `false` | `True`, `False` |
 
 ### 1-based配列の設計方針
 
