@@ -63,9 +63,15 @@ class PseudoToPythonTranslator:
 
     def __init__(self) -> None:
         self._builder = CodeBuilder()
+        self._global_names: set[str] = set()
 
     def translate(self, program: Program) -> str:
         """プログラム全体を変換する"""
+        # グローバル変数名を収集
+        for decl in program.globals:
+            if isinstance(decl, VarDecl):
+                self._global_names.update(decl.names)
+
         # グローバル変数
         for stmt in program.globals:
             self._translate_statement(stmt)
@@ -92,9 +98,47 @@ class PseudoToPythonTranslator:
         if not func.body:
             self._builder.add_line("pass")
         else:
+            # 大域変数への代入がある場合は global 宣言を追加
+            if self._global_names:
+                used = self._find_assigned_globals(func.body)
+                for gname in sorted(used):
+                    self._builder.add_line(f"global {gname}")
             for stmt in func.body:
                 self._translate_statement(stmt)
         self._builder.dedent()
+
+    def _find_assigned_globals(self, stmts: list[Any]) -> set[str]:
+        """関数本体の文を走査し、大域変数への代入があるか調べる"""
+        found: set[str] = set()
+        for stmt in stmts:
+            if isinstance(stmt, Assignment):
+                name = self._get_assignment_target_name(stmt.target)
+                if name in self._global_names:
+                    found.add(name)
+            elif isinstance(stmt, IncrementStatement):
+                name = self._get_assignment_target_name(stmt.target)
+                if name in self._global_names:
+                    found.add(name)
+            elif isinstance(stmt, IfStatement):
+                found.update(self._find_assigned_globals(stmt.then_body))
+                for clause in stmt.elseif_clauses:
+                    found.update(self._find_assigned_globals(clause.body))
+                found.update(self._find_assigned_globals(stmt.else_body))
+            elif isinstance(stmt, (WhileStatement, ForStatement, ForEachStatement)):
+                found.update(self._find_assigned_globals(stmt.body))
+            elif isinstance(stmt, DoWhileStatement):
+                found.update(self._find_assigned_globals(stmt.body))
+        return found
+
+    @staticmethod
+    def _get_assignment_target_name(target: Expression) -> str:
+        """代入先のトップレベル変数名を取得する"""
+        if isinstance(target, Identifier):
+            return target.name
+        if isinstance(target, ArrayAccess):
+            if isinstance(target.array, Identifier):
+                return target.array.name
+        return ""
 
     # --- 文の変換 ---
 

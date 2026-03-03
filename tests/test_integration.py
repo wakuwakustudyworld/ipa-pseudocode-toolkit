@@ -257,6 +257,62 @@ class TestIntegerDivision:
         assert "rest - 10" in code
 
 
+class TestStackOperations:
+    """スタック操作（大域変数、未定義の値、要素数）"""
+
+    SOURCE = """\
+大域: 整数型: stackPos ← 3
+大域: 整数型の配列 : stack ← {4, 3,未定義の値, 未定義の値 }
+
+○論理型: push(整数型: inputData)
+　if (stackPos ≦ stackの要素数)
+　　stack[stackPos] ← inputData
+　　stackPos ← stackPos＋ 1
+　　return true
+　else
+　　return false
+　endif
+
+○整数型: pop()
+　整数型: popData ←未定義の値
+　if (stackPos＞ 1)
+　　stackPos ← stackPos− 1
+　　popData ← stack[stackPos]
+　　stack[stackPos] ←未定義の値
+　endif
+　return popData
+"""
+
+    def test_undefined_in_array_literal(self):
+        """配列リテラル内の「未定義の値」が None に変換される"""
+        code = ipa_pseudocode.translate(self.SOURCE)
+        assert "[4, 3, None, None]" in code
+
+    def test_element_count(self):
+        """「stackの要素数」が len(stack) に変換される"""
+        code = ipa_pseudocode.translate(self.SOURCE)
+        assert "len(stack)" in code
+
+    def test_global_declaration(self):
+        """大域変数への代入時に global 宣言が追加される"""
+        code = ipa_pseudocode.translate(self.SOURCE)
+        assert "global stackPos" in code
+        assert "global stack" in code
+
+    def test_push_and_pop(self):
+        """push/popが正しく動作する"""
+        code = ipa_pseudocode.translate(self.SOURCE)
+        ns: dict = {}
+        exec(code, ns)
+        # push
+        assert ns["push"](7) is True
+        assert ns["stackPos"] == 4
+        assert ns["stack"][3] == 7
+        # pop
+        assert ns["pop"]() == 7
+        assert ns["stackPos"] == 3
+
+
 class TestPublicAPI:
     """公開API（parse/translate）のテスト"""
 

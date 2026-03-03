@@ -34,6 +34,7 @@ from .ast_nodes import (
     Parameter,
     PrintStatement,
     Program,
+    PropertyAccess,
     RealLiteral,
     ReturnStatement,
     StringLiteral,
@@ -763,7 +764,23 @@ class ExpressionParser:
         # 識別子
         if tok.type == TokenType.IDENTIFIER:
             self._advance()
-            return Identifier(name=tok.value)
+            name = tok.value
+
+            # 未定義の値 / 未定義 → UndefinedLiteral
+            if name in ("未定義の値", "未定義"):
+                return UndefinedLiteral()
+
+            # 日本語プロパティパターン: Xの要素数, Xの文字数, Xの行数, Xの列数
+            for prop_suffix in ("の要素数", "の文字数", "の行数", "の列数"):
+                if name.endswith(prop_suffix):
+                    obj_name = name[: -len(prop_suffix)]
+                    if obj_name:
+                        return PropertyAccess(
+                            object=Identifier(name=obj_name),
+                            property_name=prop_suffix[1:],  # "の" を除去
+                        )
+
+            return Identifier(name=name)
 
         # 解析できない場合
         self._advance()
