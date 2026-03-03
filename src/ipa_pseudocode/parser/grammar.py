@@ -806,7 +806,17 @@ class ExpressionParser:
             prec = self.PRECEDENCE.get(tok.type, 0)
             self._advance()
             right = self.parse(prec)
-            return BinaryOp(op=self.OP_MAP[tok.type], left=left, right=right)
+            op = self.OP_MAP[tok.type]
+            # ÷ Xの商 → 整数除算 (//)
+            if tok.type == TokenType.DIVIDE:
+                if (
+                    not self._at_end()
+                    and self._current().type == TokenType.IDENTIFIER
+                    and self._current().value == "の商"
+                ):
+                    self._advance()  # "の商" を消費
+                    op = "//"
+            return BinaryOp(op=op, left=left, right=right)
 
         # 解析できない場合はそのまま返す
         return left

@@ -148,9 +148,10 @@ Python:   for item in list:
 | 擬似言語 | Python | 備考 |
 |---------|--------|------|
 | `＋` / `+` | `+` | 加算 / 文字列結合 |
-| `−` / `-` | `-` | 減算 |
+| `−` / `－` / `ー` / `-` | `-` | 減算（U+2212, U+FF0D, U+30FC, U+002D 全対応） |
 | `×` | `*` | 乗算 |
 | `÷` | `/` | 除算（実数） |
+| `÷ Xの商` | `// X` | 整数除算（商） |
 | `mod` | `%` | 剰余 |
 
 ### 関係演算子
@@ -467,3 +468,37 @@ def inRange(x, lo, hi):
         return 1
     return 0
 ```
+
+### 例7: 整数除算（÷...の商）とカタカナマイナス
+
+**擬似言語:**
+
+```
+○整数型: change(整数型: n)
+  整数型: count ← 0
+  整数型: rest ← n
+  while ( rest ≧ 0 )
+    count ← count ＋ (rest ÷ 5の商)＋ 1
+    rest ← rest ー 10
+  endwhile
+  return count
+```
+
+**Python:**
+
+```python
+def change(n):
+    count = 0
+    rest = n
+    while rest >= 0:
+        count = count + rest // 5 + 1
+        rest = rest - 10
+    return count
+```
+
+**変換ポイント:**
+
+| 擬似言語 | Python | 説明 |
+| --------- | -------- | ------ |
+| `rest ÷ 5の商` | `rest // 5` | `÷...の商` は整数除算（`//`）に変換 |
+| `rest ー 10` | `rest - 10` | `ー`（U+30FC カタカナ長音記号）もマイナスとして認識 |

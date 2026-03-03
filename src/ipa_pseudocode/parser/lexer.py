@@ -206,6 +206,9 @@ class Lexer:
         if 0x3040 <= cp <= 0x309F:  # ひらがな
             return True
         if 0x30A0 <= cp <= 0x30FF:  # カタカナ
+            # ー (U+30FC) はマイナス記号として使用されるため除外
+            if cp == 0x30FC:
+                return False
             return True
         if 0x4E00 <= cp <= 0x9FFF:  # CJK統合漢字
             return True

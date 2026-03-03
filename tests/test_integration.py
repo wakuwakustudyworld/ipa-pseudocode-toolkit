@@ -213,6 +213,50 @@ class TestGlobalVariable:
         assert ns["getCount"]() == 0
 
 
+class TestIntegerDivision:
+    """整数除算（÷...の商）"""
+
+    SOURCE = """\
+○整数型: change(整数型: n)
+　整数型: count ← 0
+　整数型: rest ← n
+　while ( rest ≧ 0 )
+　　count ← count ＋ (rest ÷ 5の商)＋ 1
+　　rest ← rest ー 10
+　endwhile
+　return count
+"""
+
+    def test_change_26(self):
+        code = ipa_pseudocode.translate(self.SOURCE)
+        ns: dict = {}
+        exec(code, ns)
+        assert ns["change"](26) == 12
+
+    def test_change_10(self):
+        code = ipa_pseudocode.translate(self.SOURCE)
+        ns: dict = {}
+        exec(code, ns)
+        assert ns["change"](10) == 4
+
+    def test_change_0(self):
+        code = ipa_pseudocode.translate(self.SOURCE)
+        ns: dict = {}
+        exec(code, ns)
+        assert ns["change"](0) == 1
+
+    def test_integer_division_in_code(self):
+        """変換結果に // が含まれることを確認"""
+        code = ipa_pseudocode.translate(self.SOURCE)
+        assert "//" in code
+        assert "rest // 5" in code
+
+    def test_katakana_minus_in_code(self):
+        """ー (U+30FC) がマイナスとして変換されることを確認"""
+        code = ipa_pseudocode.translate(self.SOURCE)
+        assert "rest - 10" in code
+
+
 class TestPublicAPI:
     """公開API（parse/translate）のテスト"""
 

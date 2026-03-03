@@ -121,6 +121,7 @@ SYMBOL_OPERATORS: list[tuple[str, TokenType]] = [
     ("＋", TokenType.PLUS),
     ("－", TokenType.MINUS),  # U+FF0D (Fullwidth Hyphen-Minus)
     ("−", TokenType.MINUS),  # U+2212 (Minus Sign)
+    ("ー", TokenType.MINUS),  # U+30FC (Katakana Prolonged Sound Mark, often used as minus)
     ("×", TokenType.MULTIPLY),
     ("÷", TokenType.DIVIDE),
     ("∧", TokenType.BIT_AND),
