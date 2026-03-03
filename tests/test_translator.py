@@ -122,11 +122,11 @@ class TestForTranslation:
     def test_foreach(self):
         code = _translate("""\
 ○foo()
-  for (item に list の要素を順に代入する)
+  for (item に items の要素を順に代入する)
     return
   endfor
 """)
-        assert "for item in list:" in code
+        assert "for item in items:" in code
 
 
 class TestWhileTranslation:

@@ -286,7 +286,7 @@ class TestStackOperations:
     def test_undefined_in_array_literal(self):
         """配列リテラル内の「未定義の値」が None に変換される"""
         code = ipa_pseudocode.translate(self.SOURCE)
-        assert "[4, 3, None, None]" in code
+        assert "Array.from_literal([4, 3, None, None])" in code
 
     def test_element_count(self):
         """「stackの要素数」が len(stack) に変換される"""
@@ -353,23 +353,26 @@ class TestDynamicArrayInit:
 
     def test_1d_dynamic_array(self):
         code = ipa_pseudocode.translate(self.SOURCE_1D)
-        assert "[0] * n" in code
+        assert "Array(n, init=0)" in code
 
     def test_2d_dynamic_array(self):
         code = ipa_pseudocode.translate(self.SOURCE_2D)
-        assert "[[0] * cols for _ in range(rows)]" in code
+        assert "Array2D(rows, cols, init=0)" in code
 
     def test_compound_size(self):
-        """(n1+n2)個の場合にサイズ式が括弧付きで出力される"""
+        """(n1+n2)個の場合"""
         code = ipa_pseudocode.translate(self.SOURCE_COMPOUND)
-        assert "[None] * (n1 + n2)" in code
+        assert "Array(n1 + n2, init=None)" in code
 
     def test_1d_execute(self):
         code = ipa_pseudocode.translate(self.SOURCE_1D)
         ns: dict = {}
         exec(code, ns)
         result = ns["makeArray"](5)
-        assert result == [0, 0, 0, 0, 0]
+        from ipa_pseudocode.core.array import Array
+        assert isinstance(result, Array)
+        assert len(result) == 5
+        assert result[1] == 0
 
 
 class TestInlineComments:
@@ -450,7 +453,7 @@ class TestMultiLineContinuation:
                           3, 4}
 """
         code = ipa_pseudocode.translate(src)
-        assert "[1, 2, 3, 4]" in code
+        assert "Array.from_literal([1, 2, 3, 4])" in code
 
 
 class TestPublicAPI:
@@ -468,3 +471,239 @@ class TestPublicAPI:
 
     def test_version(self):
         assert ipa_pseudocode.__version__ == "0.1.0"
+
+
+class TestCharAtPattern:
+    """CharAtパターン: Xのi文字目の文字"""
+
+    def test_char_at_inline(self):
+        code = ipa_pseudocode.translate("""\
+○整数型: f(文字列型: binary)
+  整数型: result ← 0
+  整数型: i, length
+  length ← binaryの文字数
+  for (iを 1 から lengthまで 1 ずつ増やす)
+    result ← result × 2 ＋ int(binaryのi文字目の文字)
+  endfor
+  return result
+""")
+        assert "binary[i - 1]" in code
+        assert "int(binary[i - 1])" in code
+
+    def test_char_at_postfix(self):
+        """配列アクセス後のCharAtパターン"""
+        code = ipa_pseudocode.translate("""\
+○f(文字列型の配列: arr)
+  return arr[1]の3文字目の文字
+""")
+        assert "arr[1][3 - 1]" in code
+
+
+class TestMathPatterns:
+    """数学パターン: の2乗, の正の平方根, の正の平方根の整数部分"""
+
+    def test_square(self):
+        code = ipa_pseudocode.translate("""\
+○f(整数型: n)
+  return nの2乗
+""")
+        assert "n ** 2" in code
+
+    def test_square_postfix_array(self):
+        """配列アクセス後のの2乗"""
+        code = ipa_pseudocode.translate("""\
+○f(整数型の配列: v)
+  整数型: i
+  実数型: temp ← 0
+  for (iを 1 から vの要素数 まで 1 ずつ増やす)
+    temp ← temp ＋ v[i]の2乗
+  endfor
+  return temp
+""")
+        assert "v[i] ** 2" in code
+
+    def test_sqrt(self):
+        code = ipa_pseudocode.translate("""\
+○f(実数型: x)
+  return xの正の平方根
+""")
+        assert "x ** 0.5" in code
+
+    def test_sqrt_int_part(self):
+        code = ipa_pseudocode.translate("""\
+○f(整数型: n)
+  return nの正の平方根の整数部分
+""")
+        assert "int(n ** 0.5)" in code
+
+    def test_cosine_similarity_pattern(self):
+        """コサイン類似度パターン（の2乗 + の正の平方根の組み合わせ）"""
+        code = ipa_pseudocode.translate("""\
+○f(実数型の配列: v)
+  実数型: temp ← 0
+  整数型: i
+  for (iを 1 から vの要素数 まで 1 ずつ増やす)
+    temp ← temp ＋ v[i]の2乗
+  endfor
+  実数型: result ← tempの正の平方根
+  return result
+""")
+        assert "v[i] ** 2" in code
+        assert "temp ** 0.5" in code
+
+
+class TestPrintWithoutSuru:
+    """出力パターン: Xを出力（するなし）"""
+
+    def test_print_without_suru(self):
+        code = ipa_pseudocode.translate("""\
+○f(整数型: n)
+  nを出力
+""")
+        assert "print(n)" in code
+
+    def test_print_with_suru(self):
+        code = ipa_pseudocode.translate("""\
+○f(整数型: n)
+  nを出力する
+""")
+        assert "print(n)" in code
+
+
+class TestSafeNameKeywords:
+    """Python予約語の回避"""
+
+    def test_in_parameter(self):
+        code = ipa_pseudocode.translate("""\
+○f(整数型の配列: in)
+  return in[1]
+""")
+        assert "def f(in_):" in code
+        assert "return in_[1]" in code
+
+    def test_builtin_not_renamed(self):
+        """Python組込み名(int等)は関数呼び出しとして使われるのでリネームしない"""
+        code = ipa_pseudocode.translate("""\
+○f(文字列型: s)
+  return int(s)
+""")
+        assert "int(s)" in code
+        assert "int_" not in code
+
+
+class TestArrayBasedExecution:
+    """Array クラスを使った1-based配列の動作検証"""
+
+    def test_array_literal_1based(self):
+        """配列リテラルが Array.from_literal で出力され、1-basedでアクセスできる"""
+        code = ipa_pseudocode.translate("""\
+大域: 整数型の配列: data ← {10, 20, 30}
+
+○整数型: first()
+  return data[1]
+""")
+        assert "Array.from_literal" in code
+        ns: dict = {}
+        exec(code, ns)
+        result = ns["first"]()
+        assert result == 10
+
+    def test_array_init_1based(self):
+        """動的配列初期化が Array で出力され、1-basedでアクセスできる"""
+        code = ipa_pseudocode.translate("""\
+○整数型の配列: makeAndSet(整数型: n)
+  整数型の配列: arr ← {n個の0}
+  arr[1] ← 99
+  arr[n] ← 88
+  return arr
+""")
+        ns: dict = {}
+        exec(code, ns)
+        result = ns["makeAndSet"](3)
+        assert result[1] == 99
+        assert result[3] == 88
+        assert result[2] == 0
+
+    def test_array2d_init(self):
+        """2D動的配列初期化が Array2D で出力される"""
+        code = ipa_pseudocode.translate("""\
+○f(整数型: rows, 整数型: cols)
+  整数型の二次元配列: mat ← {rows行cols列の0}
+  mat[1, 1] ← 42
+  return mat
+""")
+        assert "Array2D" in code
+        ns: dict = {}
+        exec(code, ns)
+        result = ns["f"](2, 3)
+        assert result[1, 1] == 42
+        assert result[2, 3] == 0
+
+    def test_array_import_injected(self):
+        """Array 使用時に import 文が自動挿入される"""
+        code = ipa_pseudocode.translate("""\
+大域: 整数型の配列: data ← {1, 2, 3}
+""")
+        assert "from ipa_pseudocode.core.array import Array" in code
+
+    def test_array2d_import_injected(self):
+        """Array2D 使用時に import 文が自動挿入される"""
+        code = ipa_pseudocode.translate("""\
+○f()
+  整数型の二次元配列: mat ← {2行3列の0}
+  return mat
+""")
+        assert "from ipa_pseudocode.core.array import Array2D" in code
+
+    def test_no_import_when_no_array(self):
+        """配列を使わない場合は import が挿入されない"""
+        code = ipa_pseudocode.translate("""\
+○整数型: add(整数型: a, 整数型: b)
+  return a ＋ b
+""")
+        assert "import" not in code
+
+    def test_swap_with_array(self):
+        """Array を使った入れ替えが正しく動作する"""
+        code = ipa_pseudocode.translate("""\
+○f(整数型の配列: arr)
+  arr[1]とarr[2]の値を入れ替える
+""")
+        ns: dict = {}
+        exec(code, ns)
+        from ipa_pseudocode.core.array import Array
+        arr = Array.from_literal([10, 20, 30])
+        ns["f"](arr)
+        assert arr[1] == 20
+        assert arr[2] == 10
+
+    def test_append_with_array(self):
+        """Array を使った末尾追加が正しく動作する"""
+        code = ipa_pseudocode.translate("""\
+○f(整数型の配列: arr, 整数型: val)
+  arrの末尾にvalの値を追加する
+""")
+        ns: dict = {}
+        exec(code, ns)
+        from ipa_pseudocode.core.array import Array
+        arr = Array.from_literal([1, 2])
+        ns["f"](arr, 3)
+        assert len(arr) == 3
+        assert arr[3] == 3
+
+    def test_foreach_with_array(self):
+        """Array に対する for-each が正しく動作する"""
+        code = ipa_pseudocode.translate("""\
+○整数型: sumAll(整数型の配列: arr)
+  整数型: total ← 0
+  整数型: x
+  for (x に arr の要素を順に代入する)
+    total ← total ＋ x
+  endfor
+  return total
+""")
+        ns: dict = {}
+        exec(code, ns)
+        from ipa_pseudocode.core.array import Array
+        result = ns["sumAll"](Array.from_literal([10, 20, 30]))
+        assert result == 60

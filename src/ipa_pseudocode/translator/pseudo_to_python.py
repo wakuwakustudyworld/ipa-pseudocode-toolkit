@@ -5,6 +5,7 @@ ASTを走査してPythonコードを生成するトランスレータ。
 
 from __future__ import annotations
 
+import keyword
 from typing import Any
 
 from ..parser.ast_nodes import (
@@ -64,6 +65,8 @@ class PseudoToPythonTranslator:
     def __init__(self) -> None:
         self._builder = CodeBuilder()
         self._global_names: set[str] = set()
+        self._uses_array: bool = False
+        self._uses_array2d: bool = False
 
     def translate(self, program: Program) -> str:
         """プログラム全体を変換する"""
@@ -87,12 +90,32 @@ class PseudoToPythonTranslator:
         for stmt in program.statements:
             self._translate_statement(stmt)
 
+        # Array/Array2D の import 挿入
+        imports: list[str] = []
+        if self._uses_array:
+            imports.append("Array")
+        if self._uses_array2d:
+            imports.append("Array2D")
+        if imports:
+            self._builder.add_import(
+                f"from ipa_pseudocode.core.array import {', '.join(imports)}"
+            )
+
         return self._builder.build()
+
+    # --- Python予約語の回避 ---
+
+    @classmethod
+    def _safe_name(cls, name: str) -> str:
+        """Python予約語と衝突する場合に末尾に _ を付ける"""
+        if keyword.iskeyword(name):
+            return name + "_"
+        return name
 
     # --- 関数定義 ---
 
     def _translate_function(self, func: FunctionDef) -> None:
-        params = ", ".join(p.name for p in func.params)
+        params = ", ".join(self._safe_name(p.name) for p in func.params)
         self._builder.add_line(f"def {func.name}({params}):")
         self._builder.indent()
         if not func.body:
@@ -173,17 +196,18 @@ class PseudoToPythonTranslator:
             self._builder.add_line(self._expr(stmt.expression))
 
     def _translate_var_decl(self, decl: VarDecl) -> None:
+        names = [self._safe_name(n) for n in decl.names]
         if decl.initializer:
             init = self._expr(decl.initializer)
-            if len(decl.names) == 1:
-                self._builder.add_line(f"{decl.names[0]} = {init}")
+            if len(names) == 1:
+                self._builder.add_line(f"{names[0]} = {init}")
             else:
                 # 最後の変数に初期値、他はNone
-                for name in decl.names[:-1]:
+                for name in names[:-1]:
                     self._builder.add_line(f"{name} = None")
-                self._builder.add_line(f"{decl.names[-1]} = {init}")
+                self._builder.add_line(f"{names[-1]} = {init}")
         else:
-            for name in decl.names:
+            for name in names:
                 self._builder.add_line(f"{name} = None")
 
     def _translate_assignment(self, assign: Assignment) -> None:
@@ -324,6 +348,7 @@ class PseudoToPythonTranslator:
         "<<": 7, ">>": 7,
         "+": 8, "-": 8,
         "*": 9, "/": 9, "//": 9, "%": 9,
+        "**": 10,
     }
 
     def _parenthesize(self, child: Expression, child_str: str,
@@ -352,10 +377,11 @@ class PseudoToPythonTranslator:
         if isinstance(expr, NegativeInfinity):
             return "float('-inf')"
         if isinstance(expr, Identifier):
-            return expr.name
+            return self._safe_name(expr.name)
         if isinstance(expr, ArrayLiteral):
             elements = ", ".join(self._expr(e) for e in expr.elements)
-            return f"[{elements}]"
+            self._uses_array = True
+            return f"Array.from_literal([{elements}])"
         if isinstance(expr, ArrayAccess):
             array = self._expr(expr.array)
             indices = ", ".join(self._expr(i) for i in expr.indices)
@@ -398,13 +424,13 @@ class PseudoToPythonTranslator:
             if expr.rows_expr and expr.cols_expr:
                 rows = self._expr(expr.rows_expr)
                 cols = self._expr(expr.cols_expr)
-                return f"[[{init_val}] * {cols} for _ in range({rows})]"
+                self._uses_array2d = True
+                return f"Array2D({rows}, {cols}, init={init_val})"
             if expr.size_expr:
                 size = self._expr(expr.size_expr)
-                # サイズが複合式の場合は括弧を付ける
-                if isinstance(expr.size_expr, BinaryOp):
-                    size = f"({size})"
-                return f"[{init_val}] * {size}"
-            return f"[{init_val}]"
+                self._uses_array = True
+                return f"Array({size}, init={init_val})"
+            self._uses_array = True
+            return f"Array.from_literal([{init_val}])"
         # フォールバック
         return str(expr)

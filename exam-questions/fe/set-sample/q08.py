@@ -1,0 +1,16 @@
+def prioSched():
+    prioQueue = PrioQueue()
+    prioQueue.enqueue('A', 1)
+    prioQueue.enqueue('B', 2)
+    prioQueue.enqueue('C', 2)
+    prioQueue.enqueue('D', 3)
+    prioQueue.dequeue()
+    prioQueue.dequeue()
+    prioQueue.enqueue('D', 3)
+    prioQueue.enqueue('B', 2)
+    prioQueue.dequeue()
+    prioQueue.dequeue()
+    prioQueue.enqueue('C', 2)
+    prioQueue.enqueue('A', 1)
+    while prioQueue.size() > 0:
+        print(prioQueue.dequeue())
