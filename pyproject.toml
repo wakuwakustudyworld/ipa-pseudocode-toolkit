@@ -1,0 +1,57 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ipa-pseudocode-toolkit"
+version = "0.1.0"
+description = "情報処理技術者試験（ITパスポート試験・基本情報技術者試験・応用情報技術者試験）の擬似言語を解析・変換・実行・トレースするPythonツールキット"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "Wakuwaku Study World Co., Ltd." },
+]
+keywords = [
+    "pseudocode",
+    "ipa",
+    "fe-exam",
+    "parser",
+    "translator",
+    "情報処理技術者試験",
+    "擬似言語",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Education",
+    "Topic :: Software Development :: Compilers",
+    "Topic :: Software Development :: Interpreters",
+    "Natural Language :: Japanese",
+]
+
+[project.urls]
+Homepage = "https://github.com/wakuwakustudyworld/ipa-pseudocode-toolkit"
+Repository = "https://github.com/wakuwakustudyworld/ipa-pseudocode-toolkit"
+Issues = "https://github.com/wakuwakustudyworld/ipa-pseudocode-toolkit/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ipa_pseudocode"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
