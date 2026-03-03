@@ -1,0 +1,9 @@
+// 基本情報技術者試験 科目B サンプル問題セット 問7
+// 正解: カ (n × factorial(n − 1))
+// 階乗（再帰）
+
+○整数型: factorial(整数型: n)
+　if (n ＝ 0)
+　　return 1
+　endif
+　return n × factorial(n − 1)

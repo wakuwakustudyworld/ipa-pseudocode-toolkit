@@ -1,0 +1,12 @@
+// 令和6年度 基本情報技術者試験 科目B 問1
+// 異なる三つの整数のうちの最大値を返す関数
+// 正解: イ (x ＞ y and x ＞ z)
+
+○整数型: maximum(整数型: x, 整数型: y, 整数型: z)
+　if (x ＞ y and x ＞ z)
+　  return x
+　elseif (y ＞ z)
+　  return y
+　else
+　  return z
+　endif

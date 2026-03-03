@@ -1,0 +1,20 @@
+// 出典: IPA 基本情報技術者試験 科目B試験 サンプル問題 問5
+// https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/fe_kamoku_b_sample.pdf
+//
+// 英単語群において c1の次にc2が出現する割合を求める関数prob
+// クラスWords: メソッド freq(文字列型: str) → 整数型（出現回数）
+//              メソッド freqE(文字列型: str) → 整数型（strで終わる英単語の数）
+// 演算子"＋"は文字列の連結、"÷"は実数として計算
+// 正解: ウ（words.freq(s1 ＋ s2) ÷ (words.freq(s1) − words.freqE(s1))）
+
+大域: Words: words /* 英単語群が格納されている */
+
+/* c1の次にc2が出現する割合を返す */
+○実数型: prob(文字型: c1, 文字型: c2)
+　文字列型: s1 ← c1の1文字だけから成る文字列
+　文字列型: s2 ← c2の1文字だけから成る文字列
+　if (words.freq(s1 ＋ s2) が 0 より大きい)
+　  return words.freq(s1 ＋ s2) ÷ (words.freq(s1) − words.freqE(s1))
+　else
+　  return 0
+　endif

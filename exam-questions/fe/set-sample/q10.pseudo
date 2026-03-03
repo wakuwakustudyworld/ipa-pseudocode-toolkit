@@ -1,0 +1,18 @@
+// 基本情報技術者試験 科目B サンプル問題セット 問10
+// 正解: カ (prev.next.next)
+// 単方向リストからの要素削除
+
+大域: ListElement: listHead
+
+○delNode(整数型: pos)
+　ListElement: prev
+　整数型: i
+　if (pos が 1 と等しい)
+　　listHead ← listHead.next
+　else
+　　prev ← listHead
+　　for (i を 2 から pos − 1 まで 1 ずつ増やす)
+　　　prev ← prev.next
+　　endfor
+　　prev.next ← prev.next.next
+　endif

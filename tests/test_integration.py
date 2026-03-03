@@ -313,6 +313,146 @@ class TestStackOperations:
         assert ns["stackPos"] == 3
 
 
+class TestParenthesization:
+    """二項演算の括弧付け"""
+
+    SOURCE = """\
+○整数型: search(整数型の配列: data, 整数型: target)
+  整数型: low ← 1
+  整数型: high ← dataの要素数
+  整数型: middle ← (low ＋ high) ÷ 2の商
+  return middle
+"""
+
+    def test_parenthesization(self):
+        """(low + high) // 2 のように括弧が正しく付く"""
+        code = ipa_pseudocode.translate(self.SOURCE)
+        assert "(low + high) // 2" in code
+
+
+class TestDynamicArrayInit:
+    """動的配列初期化 {n個のX}, {n行m列のX}"""
+
+    SOURCE_1D = """\
+○整数型の配列: makeArray(整数型: n)
+  整数型の配列: arr ← {n個の0}
+  return arr
+"""
+
+    SOURCE_2D = """\
+○整数型の二次元配列: makeMatrix(整数型: rows, 整数型: cols)
+  整数型の二次元配列: mat ← {rows行cols列の0}
+  return mat
+"""
+
+    SOURCE_COMPOUND = """\
+○整数型の配列: makeWork(整数型: n1, 整数型: n2)
+  整数型の配列: work ← {(n1＋n2)個の未定義の値}
+  return work
+"""
+
+    def test_1d_dynamic_array(self):
+        code = ipa_pseudocode.translate(self.SOURCE_1D)
+        assert "[0] * n" in code
+
+    def test_2d_dynamic_array(self):
+        code = ipa_pseudocode.translate(self.SOURCE_2D)
+        assert "[[0] * cols for _ in range(rows)]" in code
+
+    def test_compound_size(self):
+        """(n1+n2)個の場合にサイズ式が括弧付きで出力される"""
+        code = ipa_pseudocode.translate(self.SOURCE_COMPOUND)
+        assert "[None] * (n1 + n2)" in code
+
+    def test_1d_execute(self):
+        code = ipa_pseudocode.translate(self.SOURCE_1D)
+        ns: dict = {}
+        exec(code, ns)
+        result = ns["makeArray"](5)
+        assert result == [0, 0, 0, 0, 0]
+
+
+class TestInlineComments:
+    """インラインコメント // の除去"""
+
+    SOURCE = """\
+○整数型: sumWithComment(整数型: n)
+  整数型: s ← 0
+  for (i を 1 から n まで 1 ずつ増やす) // ループ
+    s ← s ＋ i
+  endfor
+  return s
+"""
+
+    def test_inline_comment_stripped(self):
+        code = ipa_pseudocode.translate(self.SOURCE)
+        ns: dict = {}
+        exec(code, ns)
+        assert ns["sumWithComment"](10) == 55
+
+
+class TestModuloOperator:
+    """÷ X の余り → % 演算子"""
+
+    SOURCE = """\
+○整数型: remainder(整数型: a, 整数型: b)
+  return a ÷ b の余り
+"""
+
+    def test_modulo(self):
+        code = ipa_pseudocode.translate(self.SOURCE)
+        assert "a % b" in code
+
+    def test_modulo_execute(self):
+        code = ipa_pseudocode.translate(self.SOURCE)
+        ns: dict = {}
+        exec(code, ns)
+        assert ns["remainder"](10, 3) == 1
+        assert ns["remainder"](15, 5) == 0
+
+
+class TestPropertyAccessPostfix:
+    """expr の要素数 （後置プロパティアクセス）"""
+
+    SOURCE = """\
+○整数型: getLen(整数型の配列: arr)
+  整数型の配列: nested ← {{1, 2}, {3, 4}}
+  return arr[1]
+"""
+
+    def test_postfix_property_in_condition(self):
+        """tree[n]の要素数 のような後置プロパティが正しく変換される"""
+        src = """\
+大域: 整数型配列の配列: tree ← {{2, 3}, {4}, {}}
+○整数型: countChildren(整数型: n)
+  return tree[n]の要素数
+"""
+        code = ipa_pseudocode.translate(src)
+        assert "len(tree[n])" in code
+
+
+class TestMultiLineContinuation:
+    """複数行にまたがる配列リテラル・関数定義"""
+
+    SOURCE = """\
+○整数型: test(整数型の配列: a,
+              整数型: n)
+  return a[1] ＋ n
+"""
+
+    def test_multiline_function_def(self):
+        code = ipa_pseudocode.translate(self.SOURCE)
+        assert "def test(a, n):" in code
+
+    def test_multiline_array_literal(self):
+        src = """\
+大域: 整数型の配列: data ← {1, 2,
+                          3, 4}
+"""
+        code = ipa_pseudocode.translate(src)
+        assert "[1, 2, 3, 4]" in code
+
+
 class TestPublicAPI:
     """公開API（parse/translate）のテスト"""
 

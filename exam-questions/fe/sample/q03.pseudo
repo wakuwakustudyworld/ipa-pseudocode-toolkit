@@ -1,0 +1,22 @@
+// 出典: IPA 基本情報技術者試験 科目B試験 サンプル問題 問3
+// https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/fe_kamoku_b_sample.pdf
+//
+// 単方向リストに文字を追加する手続append
+// クラスListElement: メンバ変数 val(文字型), next(ListElement型, 初期状態は未定義)
+// コンストラクタ ListElement(文字型: qVal) で val を初期化
+// 正解: ア（a = 未定義, b = curr）
+
+大域: ListElement: listHead ← 未定義の値
+
+○append(文字型: qVal)
+　ListElement: prev, curr
+　curr ← ListElement(qVal)
+　if (listHead が 未定義)
+　  listHead ← curr
+　else
+　  prev ← listHead
+　  while (prev.next が 未定義でない)
+　    prev ← prev.next
+　  endwhile
+　  prev.next ← curr
+　endif

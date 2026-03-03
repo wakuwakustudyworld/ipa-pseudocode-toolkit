@@ -1,0 +1,11 @@
+// 令和6年度 基本情報技術者試験 科目B 問2
+// 2進数文字列を10進数に変換する関数
+// 正解: エ (result × 2 ＋ int(binaryのi文字目の文字))
+
+○整数型: convDecimal(文字列型: binary)
+　整数型: i, length, result ← 0
+　length ← binaryの文字数
+　for (iを 1 から lengthまで 1 ずつ増やす)
+　  result ← result × 2 ＋ int(binaryのi文字目の文字)
+　endfor
+　return result

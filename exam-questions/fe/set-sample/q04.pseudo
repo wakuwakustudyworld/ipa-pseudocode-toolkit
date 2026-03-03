@@ -1,0 +1,15 @@
+// 基本情報技術者試験 科目B サンプル問題セット 問4
+// 正解: エ (a=while(x≠y), b=x＞y, c=endwhile)
+// 最大公約数（ユークリッドの互除法）
+
+○整数型: gcd(整数型: num1, 整数型: num2)
+　整数型: x ← num1
+　整数型: y ← num2
+　while (x ≠ y)
+　　if (x ＞ y)
+　　　x ← x − y
+　　else
+　　　y ← y − x
+　　endif
+　endwhile
+　return x

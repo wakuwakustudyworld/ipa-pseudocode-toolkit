@@ -1,0 +1,13 @@
+// 基本情報技術者試験 科目B サンプル問題セット 問16
+// 正解: ク (64)
+// Unicode符号位置からUTF-8符号への変換
+
+○整数型の配列: encode(整数型: codePoint)
+　整数型の配列: utf8Bytes ← {224, 128, 128}
+　整数型: cp ← codePoint
+　整数型: i
+　for (i を utf8Bytesの要素数 から 1 まで 1 ずつ減らす)
+　　utf8Bytes[i] ← utf8Bytes[i] ＋ (cp mod 64)
+　　cp ← cp ÷ 64の商
+　endfor
+　return utf8Bytes

@@ -1,0 +1,19 @@
+// 基本情報技術者試験 科目B サンプル問題セット 問13
+// 正解: ウ (要素数が2でtargetがdataの末尾要素の値と等しい)
+// 二分探索（不具合あり）
+
+○整数型: search(整数型の配列: data, 整数型: target)
+　整数型: low, high, middle
+　low ← 1
+　high ← dataの要素数
+　while (low ≦ high)
+　　middle ← (low ＋ high) ÷ 2の商
+　　if (data[middle] ＜ target)
+　　　low ← middle
+　　elseif (data[middle] ＞ target)
+　　　high ← middle
+　　else
+　　　return middle
+　　endif
+　endwhile
+　return −1

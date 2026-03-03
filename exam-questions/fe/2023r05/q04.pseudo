@@ -1,0 +1,31 @@
+// 出典: 令和5年度 基本情報技術者試験 科目B 公開問題 問4
+// 正解: エ (手続testの処理終了直後の hashArray は {-1, 18, -1, 3, 11})
+// 概要: ハッシュ表。calcHash1とcalcHash2を使ったハッシュ法のトレース問題
+
+大域: 整数型の配列: hashArray
+
+○論理型: add(整数型: value)
+  整数型: i ← calcHash1(value)
+  if (hashArray[i] = -1)
+    hashArray[i] ← value
+    return true
+  else
+    i ← calcHash2(value)
+    if (hashArray[i] = -1)
+      hashArray[i] ← value
+      return true
+    endif
+  endif
+  return false
+
+○整数型: calcHash1(整数型: value)
+  return (value mod hashArrayの要素数) ＋ 1
+
+○整数型: calcHash2(整数型: value)
+  return ((value ＋ 3) mod hashArrayの要素数) ＋ 1
+
+○test()
+  hashArray ← {5個の-1}
+  add(3)
+  add(18)
+  add(11)

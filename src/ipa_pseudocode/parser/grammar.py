@@ -18,6 +18,7 @@ from .ast_nodes import (
     BooleanLiteral,
     BreakStatement,
     DoWhileStatement,
+    DynamicArrayInit,
     ElseIfClause,
     Expression,
     ExpressionStatement,
@@ -150,16 +151,65 @@ class Parser:
             # 空行をスキップ
             if not stripped:
                 continue
-            # 行コメントを除去
+            # 行コメントを除去（行全体がコメントの場合）
             if stripped.startswith("//"):
                 continue
             # ブロックコメントを除去（単一行内の場合）
             stripped = re.sub(r"/\*.*?\*/", "", stripped).strip()
             if stripped.startswith("/*"):
                 continue
+            # インラインコメント // を除去（文字列リテラル外）
+            stripped = self._strip_inline_comment(stripped)
             if stripped:
                 lines.append(stripped)
+
+        # 行の結合: 波括弧の不均衡がある場合に次の行と結合する
+        lines = self._join_continuation_lines(lines)
         return lines
+
+    @staticmethod
+    def _strip_inline_comment(line: str) -> str:
+        """行末のインラインコメント // を除去する（文字列リテラル内は除く）"""
+        in_string = False
+        i = 0
+        while i < len(line):
+            ch = line[i]
+            if ch == '"':
+                in_string = not in_string
+            elif not in_string and ch == '/' and i + 1 < len(line) and line[i + 1] == '/':
+                return line[:i].rstrip()
+            i += 1
+        return line
+
+    @staticmethod
+    def _join_continuation_lines(lines: list[str]) -> list[str]:
+        """波括弧・丸括弧が閉じていない行を次の行と結合する"""
+        result: list[str] = []
+        buffer = ""
+        brace_depth = 0
+        paren_depth = 0
+        for line in lines:
+            if buffer:
+                buffer = buffer + " " + line
+            else:
+                buffer = line
+            for ch in line:
+                if ch == '{':
+                    brace_depth += 1
+                elif ch == '}':
+                    brace_depth -= 1
+                elif ch == '(':
+                    paren_depth += 1
+                elif ch == ')':
+                    paren_depth -= 1
+            if brace_depth <= 0 and paren_depth <= 0:
+                result.append(buffer)
+                buffer = ""
+                brace_depth = 0
+                paren_depth = 0
+        if buffer:
+            result.append(buffer)
+        return result
 
     # --- ナビゲーション ---
 
@@ -602,6 +652,10 @@ class Parser:
 
     # --- 式の解析 ---
 
+    # 動的配列初期化パターン
+    _DYN_ARRAY_1D_RE = re.compile(r"^\{(.+?)個の\s*(.+?)\s*\}$")
+    _DYN_ARRAY_2D_RE = re.compile(r"^\{(.+?)行(.+?)列の\s*(.+?)\s*\}$")
+
     def _parse_expression(self, text: str) -> Expression:
         """テキストから式をパースする"""
         text = text.strip()
@@ -613,6 +667,21 @@ class Parser:
             return UndefinedLiteral()
         if text == "−∞" or text == "-∞":
             return NegativeInfinity()
+
+        # 動的配列初期化: {n行m列のX}
+        if m := self._DYN_ARRAY_2D_RE.match(text):
+            return DynamicArrayInit(
+                rows_expr=self._parse_expression(m.group(1)),
+                cols_expr=self._parse_expression(m.group(2)),
+                init_value=self._parse_expression(m.group(3)),
+            )
+
+        # 動的配列初期化: {n個のX}
+        if m := self._DYN_ARRAY_1D_RE.match(text):
+            return DynamicArrayInit(
+                size_expr=self._parse_expression(m.group(1)),
+                init_value=self._parse_expression(m.group(2)),
+            )
 
         # トークン化してPrattパーサーで解析
         lexer = Lexer(text)
@@ -683,12 +752,22 @@ class ExpressionParser:
         self._pos = 0
         self._parser = parser
 
+    _PROPERTY_SUFFIXES = frozenset(("の要素数", "の文字数", "の行数", "の列数"))
+
     def parse(self, min_prec: int = 0) -> Expression:
         """演算子優先順位に基づいて式を解析する"""
         left = self._parse_prefix()
 
-        while not self._at_end() and self._current_precedence() > min_prec:
-            left = self._parse_infix(left)
+        while not self._at_end():
+            if self._current_precedence() > min_prec:
+                left = self._parse_infix(left)
+            elif (
+                self._current().type == TokenType.IDENTIFIER
+                and self._current().value in self._PROPERTY_SUFFIXES
+            ):
+                left = self._parse_infix(left)
+            else:
+                break
 
         return left
 
@@ -818,21 +897,31 @@ class ExpressionParser:
             member_tok = self._expect(TokenType.IDENTIFIER)
             return MemberAccess(object=left, member=member_tok.value)
 
+        # 日本語プロパティ後置: expr の要素数, expr の文字数, etc.
+        if tok.type == TokenType.IDENTIFIER:
+            for prop_suffix in ("の要素数", "の文字数", "の行数", "の列数"):
+                if tok.value == prop_suffix:
+                    self._advance()
+                    return PropertyAccess(
+                        object=left,
+                        property_name=prop_suffix[1:],  # "の" を除去
+                    )
+
         # 二項演算子
         if tok.type in self.OP_MAP:
             prec = self.PRECEDENCE.get(tok.type, 0)
             self._advance()
             right = self.parse(prec)
             op = self.OP_MAP[tok.type]
-            # ÷ Xの商 → 整数除算 (//)
+            # ÷ Xの商 → 整数除算 (//), ÷ X の余り → 剰余 (%)
             if tok.type == TokenType.DIVIDE:
-                if (
-                    not self._at_end()
-                    and self._current().type == TokenType.IDENTIFIER
-                    and self._current().value == "の商"
-                ):
-                    self._advance()  # "の商" を消費
-                    op = "//"
+                if not self._at_end() and self._current().type == TokenType.IDENTIFIER:
+                    if self._current().value == "の商":
+                        self._advance()
+                        op = "//"
+                    elif self._current().value == "の余り":
+                        self._advance()
+                        op = "%"
             return BinaryOp(op=op, left=left, right=right)
 
         # 解析できない場合はそのまま返す

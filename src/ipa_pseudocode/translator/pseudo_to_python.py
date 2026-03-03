@@ -313,6 +313,30 @@ class PseudoToPythonTranslator:
 
     # --- 式の変換 ---
 
+    # Python演算子の優先順位（数値が大きいほど高優先）
+    _OP_PREC: dict[str, int] = {
+        "or": 1,
+        "and": 2,
+        "==": 4, "!=": 4, "<": 4, ">": 4, "<=": 4, ">=": 4,
+        "is": 4, "is not": 4,
+        "|": 5,
+        "&": 6,
+        "<<": 7, ">>": 7,
+        "+": 8, "-": 8,
+        "*": 9, "/": 9, "//": 9, "%": 9,
+    }
+
+    def _parenthesize(self, child: Expression, child_str: str,
+                      parent_op: str, is_right: bool) -> str:
+        """必要に応じて子式に括弧を付ける"""
+        if not isinstance(child, BinaryOp):
+            return child_str
+        child_prec = self._OP_PREC.get(child.op, 99)
+        parent_prec = self._OP_PREC.get(parent_op, 99)
+        if child_prec < parent_prec or (child_prec == parent_prec and is_right):
+            return f"({child_str})"
+        return child_str
+
     def _expr(self, expr: Expression) -> str:
         """式をPythonコード文字列に変換する"""
         if isinstance(expr, IntegerLiteral):
@@ -347,10 +371,8 @@ class PseudoToPythonTranslator:
             left = self._expr(expr.left)
             right = self._expr(expr.right)
             op = expr.op
-            if op == "is":
-                return f"{left} is {right}"
-            if op == "is not":
-                return f"{left} is not {right}"
+            left = self._parenthesize(expr.left, left, op, is_right=False)
+            right = self._parenthesize(expr.right, right, op, is_right=True)
             return f"{left} {op} {right}"
         if isinstance(expr, UnaryOp):
             operand = self._expr(expr.operand)
@@ -379,6 +401,9 @@ class PseudoToPythonTranslator:
                 return f"[[{init_val}] * {cols} for _ in range({rows})]"
             if expr.size_expr:
                 size = self._expr(expr.size_expr)
+                # サイズが複合式の場合は括弧を付ける
+                if isinstance(expr.size_expr, BinaryOp):
+                    size = f"({size})"
                 return f"[{init_val}] * {size}"
             return f"[{init_val}]"
         # フォールバック

@@ -1,0 +1,25 @@
+// 令和7年度 基本情報技術者試験 科目B 問4
+// 文字列パターン検索 (配列の要素番号は1から始まる)
+// 正解: ク (βの条件式が真となる回数は8回)
+// search({"a","b","a","b","c","a","b","c"}, {"a","b","c"})として呼び出した場合
+
+/* keyは，要素数1以上の配列である */
+○整数型の配列: search(文字型の配列: data, 文字型の配列: key)
+　整数型: i, j, lenData, lenKey
+　整数型の配列: result ← {} // 要素数0の配列
+
+　lenData ← dataの要素数
+　lenKey ← keyの要素数
+　/* (lenData ー lenKey ＋ 1) が0以下のときは繰返し処理を実行しない */
+　for (iを1から(lenData ー lenKey ＋ 1)まで1ずつ増やす)
+　　for (jを1からlenKeyまで1ずつ増やす) // α
+　　　if (data[i ＋ j ー 1]がkey[j]と等しい) /*** β ***/
+　　　　if (jがlenKeyと等しい)
+　　　　　resultの末尾にiの値を追加する
+　　　　endif
+　　　else
+　　　　αの行から始まる繰返し処理を終了する
+　　　endif
+　　endfor
+　endfor
+　return result

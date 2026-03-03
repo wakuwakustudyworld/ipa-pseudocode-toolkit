@@ -1,0 +1,35 @@
+// 令和6年度 基本情報技術者試験 科目B 問4
+// 昇順に整列された二つの配列を併合する関数
+// トレース問題: merge({2, 3}, {1, 4})として呼び出したとき /*** α ***/ の行は何回実行されるか
+// 正解: イ (1回実行される)
+
+○整数型の配列: merge(整数型の配列: data1, 整数型の配列: data2)
+ 整数型: n1 ← data1の要素数
+ 整数型: n2 ← data2の要素数
+ 整数型の配列: work ← {(n1＋n2)個の未定義の値}
+ 整数型: i ← 1
+ 整数型: j ← 1
+ 整数型: k ← 1
+
+ while ((i ≦ n1) and (j ≦ n2))
+   if (data1[i] ≦ data2[j])
+     work[k] ← data1[i]
+     i ← i ＋ 1
+   else
+     work[k] ← data2[j]
+     j ← j ＋ 1
+   endif
+   k ← k ＋ 1
+ endwhile
+ while (i ≦ n1)
+   work[k] ← data1[i]
+   i ← i ＋ 1
+   k ← k ＋ 1
+ endwhile
+ while (j ≦ n2)
+   work[k] ← data2[j] /*** α ***/
+   j ← j ＋ 1
+   k ← k ＋ 1
+ endwhile
+
+ return work

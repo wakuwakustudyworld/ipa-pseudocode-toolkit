@@ -1,0 +1,15 @@
+// 令和6年度 基本情報技術者試験 科目B 問3
+// 辺の配列を隣接行列に変換する関数
+// 正解: エ (adjMatrix[u, v] ← 1 / adjMatrix[v, u] ← 1)
+
+○整数型の二次元配列: edgesToMatrix(整数型配列の配列: edgeList,
+　                                  整数型: nodeNum)
+　整数型の二次元配列: adjMatrix ← {nodeNum行nodeNum列の 0}
+　整数型: i, u, v
+　for (iを 1 から edgeListの要素数 まで 1 ずつ増やす)
+　  u ← edgeList[i][1]
+　  v ← edgeList[i][2]
+　  adjMatrix[u, v] ← 1
+　  adjMatrix[v, u] ← 1
+　endfor
+　return adjMatrix

@@ -1,0 +1,33 @@
+// 出典: 令和5年度 基本情報技術者試験 科目B 公開問題 問3
+// 正解: エ (sort(1, 5)呼出し時、/*** α ***/の行を最初に実行したときの出力は "2 1 3 5 4")
+// 概要: クイックソート。sort(1, 5)として呼び出した際のトレース問題
+
+大域: 整数型の配列: data ← {2, 1, 3, 5, 4}
+
+○sort(整数型: first, 整数型: last)
+  整数型: pivot, i, j
+  pivot ← data[(first ＋ last) ÷ 2の商]
+  i ← first
+  j ← last
+
+  while (true)
+    while (data[i] ＜ pivot)
+      i ← i ＋ 1
+    endwhile
+    while (pivot ＜ data[j])
+      j ← j ー 1
+    endwhile
+    if (i ≧ j)
+      繰返し処理を終了する
+    endif
+    data[i]とdata[j]の値を入れ替える
+    i ← i ＋ 1
+    j ← j ー 1
+  endwhile
+  dataの全要素の値を要素番号の順に空白区切りで出力する /*** α ***/
+  if (first ＜ i ー 1)
+    sort(first, i ー 1)
+  endif
+  if (j ＋ 1 ＜ last)
+    sort(j ＋ 1, last)
+  endif

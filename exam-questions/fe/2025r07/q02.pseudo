@@ -1,0 +1,12 @@
+// 令和7年度 基本情報技術者試験 科目B 問2
+// 1円玉・5円玉・10円玉でちょうどn円にする組合せの総数を返す関数
+// 正解: ア (rest ≧ 0)
+
+○整数型: change(整数型: n)
+　整数型: count ← 0
+　整数型: rest ← n
+　while (rest ≧ 0)
+　　count ← count ＋ (rest ÷ 5の商)＋ 1
+　　rest ← rest ー 10
+　endwhile
+　return count

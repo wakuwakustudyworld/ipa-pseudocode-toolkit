@@ -1,0 +1,43 @@
+// 令和6年度 基本情報技術者試験 科目B 問5
+// 注文データから商品の関連度(リフト値)を計算し、関連度が最も大きい商品を出力する手続
+// 正解: オ (a = arrayM[i], b = arrayK[i], c = ordersの要素数)
+
+//注文データ（ここでは表の例を与えている）
+大域: 文字列型配列の配列: orders ← {{"A", "B", "D"}, {"A", "D"}, {"A"},
+               {"A", "B", "E"}, {"B"}, {"C", "E"}}
+
+○putRelatedItem(文字列型: item)
+　文字列型の配列: allItems ← ordersに含まれる文字列を
+　                      重複なく辞書順に格納した配列
+　                      //表の例では {"A", "B", "C", "D", "E"}
+　文字列型の配列: otherItems ← allItemsの複製から値がitemである
+　                           要素を除いた配列
+　整数型: i, itemCount ← 0
+　整数型の配列: arrayK ← {otherItemsの要素数個の0}
+　整数型の配列: arrayM ← {otherItemsの要素数個の0}
+　実数型: valueL, maxL ← －∞
+　文字列型の配列: order
+　文字列型: relatedItem
+
+　for (orderにordersの要素を順に代入する)
+　  if (orderのいずれかの要素の値がitemの値と等しい)
+　    itemCountの値を1増やす
+　  endif
+　  for (iを1からotherItemsの要素数まで1ずつ増やす)
+　    if (orderのいずれかの要素の値がotherItems[i]の値と等しい)
+　      if (orderのいずれかの要素の値がitemの値と等しい)
+　        arrayM[i]の値を1増やす
+　      endif
+　      arrayK[i]の値を1増やす
+　    endif
+　  endfor
+　endfor
+　for (iを1からotherItemsの要素数まで1ずつ増やす)
+　  valueL ← (arrayM[i] × ordersの要素数) ÷ (itemCount × arrayK[i])
+　                      /*実数として計算する */
+　  if (valueLがmaxLより大きい)
+　    maxL ← valueL
+　    relatedItem ← otherItems[i]
+　  endif
+　endfor
+　relatedItemの値とmaxLの値をこの順にコンマ区切りで出力する

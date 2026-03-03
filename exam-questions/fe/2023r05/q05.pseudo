@@ -1,0 +1,27 @@
+// 出典: 令和5年度 基本情報技術者試験 科目B 公開問題 問5
+// 正解: エ (a = vector1[i] × vector2[i], b = denominator × (tempの正の平方根))
+// 概要: コサイン類似度を計算する関数
+
+○実数型: calcCosineSimilarity(実数型の配列: vector1,
+                              実数型の配列: vector2)
+  実数型: similarity, numerator, denominator, temp ← 0
+  整数型: i
+  numerator ← 0
+
+  for (iを 1 から vector1の要素数 まで 1 ずつ増やす)
+    numerator ← numerator ＋ vector1[i] × vector2[i]
+  endfor
+
+  for (iを 1 から vector1の要素数 まで 1 ずつ増やす)
+    temp ← temp ＋ vector1[i]の2乗
+  endfor
+  denominator ← tempの正の平方根
+
+  temp ← 0
+  for (iを 1 から vector2の要素数 まで 1 ずつ増やす)
+    temp ← temp ＋ vector2[i]の2乗
+  endfor
+  denominator ← denominator × (tempの正の平方根)
+
+  similarity ← numerator ÷ denominator
+  return similarity

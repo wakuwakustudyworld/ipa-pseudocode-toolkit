@@ -1,0 +1,16 @@
+// 出典: IPA 基本情報技術者試験 科目B試験 サンプル問題 問2
+// https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/fe_kamoku_b_sample.pdf
+//
+// 整数型の配列arrayの要素の並びを逆順にするプログラム
+// 配列の要素番号は1から始まる
+// 正解: ウ（a = arrayの要素数 − left ＋ 1, b = array[left]）
+
+　整数型の配列: array ← {1, 2, 3, 4, 5}
+　整数型: right, left
+　整数型: tmp
+　for (left を 1 から (arrayの要素数 ÷ 2 の商) まで 1 ずつ増やす)
+　  right ← arrayの要素数 − left ＋ 1
+　  tmp ← array[right]
+　  array[right] ← array[left]
+　  array[left] ← tmp
+　endfor

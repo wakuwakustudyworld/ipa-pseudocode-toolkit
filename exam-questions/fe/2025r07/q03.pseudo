@@ -1,0 +1,24 @@
+// 令和7年度 基本情報技術者試験 科目B 問3
+// スタックのpush/pop操作 (配列の要素番号は1から始まる)
+// 正解: イ (a: stackPos, b: stackPos − 1)
+
+大域: 整数型: stackPos ← 3
+大域: 整数型の配列: stack ← {4, 3, 未定義の値, 未定義の値}
+
+○論理型: push(整数型: inputData)
+　if (stackPos ≦ stackの要素数)
+　　stack[stackPos] ← inputData
+　　stackPos ← stackPos＋ 1
+　　return true
+　else
+　　return false
+　endif
+
+○整数型: pop()
+　整数型: popData ← 未定義の値
+　if (stackPos＞ 1)
+　　stackPos ← stackPos − 1
+　　popData ← stack[stackPos]
+　　stack[stackPos] ← 未定義の値
+　endif
+　return popData

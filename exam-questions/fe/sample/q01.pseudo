@@ -1,0 +1,17 @@
+// 出典: IPA 基本情報技術者試験 科目B試験 サンプル問題 問1
+// https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/fe_kamoku_b_sample.pdf
+//
+// ある施設の入場料を年齢から求める関数fee
+// 0歳〜3歳: 100円、4歳〜9歳: 300円、10歳以上: 500円
+// 正解: カ（age が 9 以下）
+
+○整数型: fee(整数型: age)
+　整数型: ret
+　if (age が 3 以下)
+　  ret ← 100
+　elseif (age が 9 以下)
+　  ret ← 300
+　else
+　  ret ← 500
+　endif
+　return ret

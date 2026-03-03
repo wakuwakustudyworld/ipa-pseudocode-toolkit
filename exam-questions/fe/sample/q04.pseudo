@@ -1,0 +1,22 @@
+// 出典: IPA 基本情報技術者試験 科目B試験 サンプル問題 問4
+// https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/fe_kamoku_b_sample.pdf
+//
+// 疎行列を格納に適したデータ構造に変換する関数transformSparseMatrix
+// 配列の要素番号は1から始まる
+// 問題は戻り値の内容を問うもの（コード中に空欄なし）
+// 正解: イ（a = {1, 2, 2, 3, 3, 4, 5}, b = {1, 2, 3, 4, 5, 4, 5}, c = {3, 2, 2, 1, 3, 2, 1}）
+
+○整数型配列の配列: transformSparseMatrix(整数型の二次元配列: matrix)
+　整数型: i, j
+　整数型配列の配列: sparseMatrix
+　sparseMatrix ← {{}, {}, {}} /* 要素数0の配列を三つ要素にもつ配列 */
+　for (i を 1 から matrixの行数 まで 1 ずつ増やす)
+　  for (j を 1 から matrixの列数 まで 1 ずつ増やす)
+　    if (matrix[i, j] が 0 でない)
+　      sparseMatrix[1]の末尾 に iの値 を追加する
+　      sparseMatrix[2]の末尾 に jの値 を追加する
+　      sparseMatrix[3]の末尾 に matrix[i, j]の値 を追加する
+　    endif
+　  endfor
+　endfor
+　return sparseMatrix

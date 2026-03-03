@@ -1,0 +1,16 @@
+// 基本情報技術者試験 科目B サンプル問題セット 問2
+// 正解: ウ (a=3と5, b=3, c=5)
+// fizzBuzz関数
+
+○文字列型: fizzBuzz(整数型: num)
+　文字列型: result
+　if (num mod 15 ＝ 0)
+　　result ← "3 と 5 で割り切れる"
+　elseif (num mod 3 ＝ 0)
+　　result ← "3 で割り切れる"
+　elseif (num mod 5 ＝ 0)
+　　result ← "5 で割り切れる"
+　else
+　　result ← "3 でも 5 でも割り切れない"
+　endif
+　return result

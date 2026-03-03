@@ -1,0 +1,29 @@
+// 令和7年度 基本情報技術者試験 科目B 問1
+// 4の倍数を数える関数 (function1とfunction2は同じ結果を返す)
+// 正解: カ (a: iを1から3まで1ずつ増やす, b: jをtempNから始めてmを超えない範囲で4ずつ増やす)
+
+○整数型: function1(整数型: n, 整数型: m)
+　整数型: count ← 0
+　整数型:i
+　for (iをnからmまで1ずつ増やす)
+　　if ((i mod 4)が0と等しい)
+　　　count ← count＋ 1
+　　endif
+　endfor
+　return count
+
+○整数型: function2(整数型: n, 整数型: m)
+　整数型: count ← 0
+　整数型: tempN ← n
+　整数型: i, j
+　for (iを1から3まで1ずつ増やす)
+　　if ((tempN mod 4)が0と等しい)
+　　　繰返し処理を終了する
+　　endif
+　　tempN ← tempN＋ 1
+　endfor
+
+　for (jをtempNから始めてmを超えない範囲で4ずつ増やす)
+　　count ← count＋ 1
+　endfor
+　return count

@@ -1,0 +1,23 @@
+// 出典: 令和5年度 基本情報技術者試験 科目B 公開問題 問1
+// 正解: ア (a = maxNum, b = i ÷ j の余り が 0 と等しい)
+// 概要: 引数で与えられた整数以下の全ての素数だけを格納した配列を返す
+
+○整数型の配列: findPrimeNumbers(整数型: maxNum)
+  整数型の配列: pnList ← {}  // 要素数0の配列
+  整数型: i, j
+  論理型: divideFlag
+  for (i を 2 から maxNum まで 1 ずつ増やす)
+    divideFlag ← true
+
+    /* iの正の平方根の整数部分が 2未満のときは，繰返し処理を実行しない */
+    for (j を 2 から iの正の平方根の整数部分 まで 1 ずつ増やす) // α
+      if (i ÷ j の余り が 0 と等しい)
+        divideFlag ← false
+        αの行から始まる繰返し処理を終了する
+      endif
+    endfor
+    if (divideFlagが trueと等しい)
+      pnListの末尾に iの値を追加する
+    endif
+  endfor
+  return pnList

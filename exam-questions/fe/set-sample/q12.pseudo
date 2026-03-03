@@ -1,0 +1,15 @@
+// 基本情報技術者試験 科目B サンプル問題セット 問12
+// 正解: エ (s1[i] ＝ s2[i])
+// 文字配列の類似度
+
+○実数型: simRatio(文字型の配列: s1, 文字型の配列: s2)
+　整数型: i, cnt ← 0
+　if (s1の要素数 ≠ s2の要素数)
+　　return -1
+　endif
+　for (i を 1 から s1の要素数 まで 1 ずつ増やす)
+　　if (s1[i] ＝ s2[i])
+　　　cnt ← cnt ＋ 1
+　　endif
+　endfor
+　return cnt ÷ s1の要素数
