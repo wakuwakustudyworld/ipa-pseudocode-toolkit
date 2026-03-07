@@ -197,8 +197,8 @@ Python / 擬似言語テキスト
 |---------|------|------|
 | Phase 1 | core（Array等）+ lexer/parser + 擬似言語→Python変換 | 完了 |
 | Phase 2 | executor（擬似言語の直接実行）+ trace | 完了 |
-| Phase 3 | Python→擬似言語の逆変換 | ← 今ここ |
-| Phase 4 | docs整備 + PyPI公開 + exam-questions充実 | 未着手 |
+| Phase 3 | Python→擬似言語の逆変換 | 完了 |
+| Phase 4 | docs整備 + PyPI公開 + exam-questions充実 | ← 今ここ |
 
 ### コーディング規約
 

@@ -150,6 +150,40 @@ table = ipa_pseudocode.trace(source, watch=["x", "y"])
 print(table.to_csv())   # CSV形式で出力
 ```
 
+### PythonコードをIPA擬似言語に逆変換する
+
+```python
+import ipa_pseudocode
+
+python_code = """\
+def fee(age: int) -> int:
+    if age <= 3:
+        ret = 100
+    elif age <= 9:
+        ret = 300
+    else:
+        ret = 500
+    return ret
+"""
+
+pseudo_code = ipa_pseudocode.reverse_translate(python_code)
+print(pseudo_code)
+```
+
+出力:
+
+```
+○整数型: fee(整数型: age)
+  if (age ≦ 3)
+    ret ← 100
+  elseif (age ≦ 9)
+    ret ← 300
+  else
+    ret ← 500
+  endif
+  return ret
+```
+
 ### ASTを取得する
 
 ```python
@@ -264,6 +298,12 @@ print(arr2d[2, 3])  # 6（2行3列）
 擬似言語を実行し、トレース表を返す。`watch` で特定の変数のみ追跡可能。
 `TraceTable` は `.to_markdown()`, `.to_csv()`, `.to_dict()` で出力できる。
 
+### `ipa_pseudocode.reverse_translate(source: str) -> str`
+
+PythonソースコードをIPA擬似言語に逆変換する。
+Python の型ヒント（`int`, `str`, `bool` 等）があれば擬似言語の型宣言に変換される。
+演算子・制御構造・特殊パターン（swap, append, `+=`, `print`, `len` 等）を自動認識する。
+
 ## 開発
 
 ```bash
@@ -278,7 +318,7 @@ ruff check src/ tests/
 
 ```text
 src/ipa_pseudocode/
-├── __init__.py          # 公開API: parse(), translate(), execute(), call_function(), trace()
+├── __init__.py          # 公開API: parse(), translate(), reverse_translate(), execute(), call_function(), trace()
 ├── core/                # 中核データ構造
 │   ├── types.py         # 型定義（整数型、実数型、論理型等）
 │   ├── array.py         # 1-based配列（Array, Array2D）
@@ -288,9 +328,10 @@ src/ipa_pseudocode/
 │   ├── lexer.py         # 字句解析器
 │   ├── ast_nodes.py     # ASTノード定義
 │   └── grammar.py       # 構文解析器
-├── translator/          # AST→Pythonコード
+├── translator/          # AST⇔コード変換
 │   ├── codegen.py       # コード生成ヘルパー
-│   └── pseudo_to_python.py  # Python変換器
+│   ├── pseudo_to_python.py  # 擬似言語→Python変換器
+│   └── python_to_pseudo.py  # Python→擬似言語逆変換器
 └── runtime/             # 擬似言語の直接実行・トレース
     ├── executor.py      # AST直接実行エンジン
     ├── builtins.py      # 組込み関数
@@ -303,7 +344,7 @@ src/ipa_pseudocode/
 | --------- | ------ | ------ |
 | Phase 1 | core + lexer/parser + 擬似言語→Python変換 | 完了 |
 | Phase 2 | executor（擬似言語の直接実行）+ trace | 完了 |
-| Phase 3 | Python→擬似言語の逆変換 | 未着手 |
+| Phase 3 | Python→擬似言語の逆変換 | 完了 |
 | Phase 4 | docs整備 + PyPI公開 + exam-questions充実 | 未着手 |
 
 ## ライセンス

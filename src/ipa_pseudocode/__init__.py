@@ -13,8 +13,9 @@ from .parser.grammar import parse as _parse
 from .runtime.executor import ExecutionResult, Executor
 from .runtime.trace import TraceTable
 from .translator.pseudo_to_python import translate as _translate
+from .translator.python_to_pseudo import reverse_translate as _reverse_translate
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 
 def parse(source: str) -> Program:
@@ -90,3 +91,15 @@ def trace(source: str, watch: list[str] | None = None) -> TraceTable:
         executor._tracer.set_watch(watch)
     result = executor.execute(program)
     return result.trace
+
+
+def reverse_translate(source: str) -> str:
+    """PythonソースコードをIPA擬似言語に変換する
+
+    Args:
+        source: Pythonソースコード
+
+    Returns:
+        IPA擬似言語コード文字列
+    """
+    return _reverse_translate(source)
