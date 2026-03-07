@@ -470,7 +470,7 @@ class TestPublicAPI:
         assert "return 1" in code
 
     def test_version(self):
-        assert ipa_pseudocode.__version__ == "0.1.0"
+        assert ipa_pseudocode.__version__ == "0.2.0"
 
 
 class TestCharAtPattern:

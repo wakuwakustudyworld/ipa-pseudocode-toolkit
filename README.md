@@ -1,12 +1,14 @@
 # ipa-pseudocode-toolkit
 
-情報処理技術者試験（ITパスポート試験・基本情報技術者試験・応用情報技術者試験）の擬似言語を解析・変換するPythonツールキット。
+情報処理技術者試験（ITパスポート試験・基本情報技術者試験・応用情報技術者試験）の擬似言語を解析・変換・実行・トレースするPythonツールキット。
 
 IPA「試験で使用する情報技術に関する用語・プログラム言語など」[Ver.5.1](https://www.ipa.go.jp/shiken/syllabus/doe3um0000002djj-att/shiken_yougo_ver5_1.pdf)（2024年4月試験から適用）に準拠。
 
 ## 特徴
 
 - IPA擬似言語のソースコードをPythonに変換
+- 擬似言語を直接実行（Python変換不要）
+- 実行過程のトレース表生成（Markdown / CSV出力対応）
 - 全角演算子（`←`, `×`, `÷`, `≠`, `≦`, `≧` 等）に対応
 - 日本語の条件式（`age が 3 以下`）やアクション文（`の末尾に...を追加する`）を解析
 - 1-based配列クラス（`Array`, `Array2D`）を提供
@@ -86,6 +88,66 @@ exec(code, ns)
 
 print(ns["factorial"](5))   # 120
 print(ns["factorial"](10))  # 3628800
+```
+
+### 擬似言語を直接実行する（Python変換不要）
+
+```python
+import ipa_pseudocode
+from ipa_pseudocode.core.array import Array
+
+source = """\
+○整数型: total(整数型: n)
+  整数型: s ← 0
+  for (i を 1 から n まで 1 ずつ増やす)
+    s ← s ＋ i
+  endfor
+  return s
+"""
+
+# 関数を指定して呼び出す
+result = ipa_pseudocode.call_function(source, "total", 10)
+print(result)  # 55
+```
+
+### トレース表を生成する
+
+IPA試験のトレース問題の自動解答・解説に活用できる。
+
+```python
+import ipa_pseudocode
+
+source = """\
+整数型: x ← 1
+整数型: y ← 2
+整数型: z ← 3
+x ← y
+y ← z
+z ← x
+"""
+
+table = ipa_pseudocode.trace(source)
+print(table.to_markdown())
+```
+
+出力:
+
+```markdown
+| Step | 文 | x | y | z | 出力 |
+| --- | --- | --- | --- | --- | --- |
+| 1 | x ← 1 | 1 | | | |
+| 2 | y ← 2 | 1 | 2 | | |
+| 3 | z ← 3 | 1 | 2 | 3 | |
+| 4 | x ← 2 | 2 | 2 | 3 | |
+| 5 | y ← 3 | 2 | 3 | 3 | |
+| 6 | z ← 2 | 2 | 3 | 2 | |
+```
+
+特定の変数のみ追跡する場合:
+
+```python
+table = ipa_pseudocode.trace(source, watch=["x", "y"])
+print(table.to_csv())   # CSV形式で出力
 ```
 
 ### ASTを取得する
@@ -185,6 +247,23 @@ print(arr2d[2, 3])  # 6（2行3列）
 
 擬似言語のソースコードをパースしてAST（抽象構文木）を返す。
 
+### `ipa_pseudocode.execute(source: str, trace_enabled: bool = False) -> ExecutionResult`
+
+擬似言語のソースコードを直接実行する。戻り値の `ExecutionResult` には以下が含まれる:
+- `output: list[str]` — 出力された文字列のリスト
+- `return_value: Any` — トップレベルの戻り値
+- `trace: TraceTable | None` — トレース表（`trace_enabled=True` の場合）
+- `global_vars: dict[str, Any]` — 実行後のグローバル変数
+
+### `ipa_pseudocode.call_function(source: str, func_name: str, *args) -> Any`
+
+擬似言語で定義された関数を指定引数で呼び出し、戻り値を返す。
+
+### `ipa_pseudocode.trace(source: str, watch: list[str] | None = None) -> TraceTable`
+
+擬似言語を実行し、トレース表を返す。`watch` で特定の変数のみ追跡可能。
+`TraceTable` は `.to_markdown()`, `.to_csv()`, `.to_dict()` で出力できる。
+
 ## 開発
 
 ```bash
@@ -199,7 +278,7 @@ ruff check src/ tests/
 
 ```text
 src/ipa_pseudocode/
-├── __init__.py          # 公開API: parse(), translate()
+├── __init__.py          # 公開API: parse(), translate(), execute(), call_function(), trace()
 ├── core/                # 中核データ構造
 │   ├── types.py         # 型定義（整数型、実数型、論理型等）
 │   ├── array.py         # 1-based配列（Array, Array2D）
@@ -209,9 +288,13 @@ src/ipa_pseudocode/
 │   ├── lexer.py         # 字句解析器
 │   ├── ast_nodes.py     # ASTノード定義
 │   └── grammar.py       # 構文解析器
-└── translator/          # AST→Pythonコード
-    ├── codegen.py       # コード生成ヘルパー
-    └── pseudo_to_python.py  # Python変換器
+├── translator/          # AST→Pythonコード
+│   ├── codegen.py       # コード生成ヘルパー
+│   └── pseudo_to_python.py  # Python変換器
+└── runtime/             # 擬似言語の直接実行・トレース
+    ├── executor.py      # AST直接実行エンジン
+    ├── builtins.py      # 組込み関数
+    └── trace.py         # トレース表の記録・出力
 ```
 
 ### ロードマップ
@@ -219,7 +302,7 @@ src/ipa_pseudocode/
 | フェーズ | 内容 | 状態 |
 | --------- | ------ | ------ |
 | Phase 1 | core + lexer/parser + 擬似言語→Python変換 | 完了 |
-| Phase 2 | executor（擬似言語の直接実行）+ trace | 未着手 |
+| Phase 2 | executor（擬似言語の直接実行）+ trace | 完了 |
 | Phase 3 | Python→擬似言語の逆変換 | 未着手 |
 | Phase 4 | docs整備 + PyPI公開 + exam-questions充実 | 未着手 |
 
