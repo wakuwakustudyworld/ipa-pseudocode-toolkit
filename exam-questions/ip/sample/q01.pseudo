@@ -1,0 +1,13 @@
+// 出典: ITパスポート試験 疑似言語のサンプル問題 問1
+// 正解: ア (a = sum ＋ dataArray[i], b = dataArrayの要素数)
+// 概要: 配列の要素の平均値を求める関数
+
+○実数型: calcMean(実数型の配列: dataArray)
+  実数型: sum, mean
+  整数型: i
+  sum ← 0
+  for (iを1からdataArrayの要素数まで1ずつ増やす)
+    sum ← sum ＋ dataArray[i]
+  endfor
+  mean ← sum ÷ dataArrayの要素数
+  return mean

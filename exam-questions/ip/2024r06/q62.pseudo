@@ -1,0 +1,15 @@
+// 出典: 令和6年度 ITパスポート試験 公開問題 問62
+// 正解: エ ({1, 1, 2, 1, 0})
+// 概要: 配列の各要素が1なら"A"、それ以外なら"B"を連結して文字列に変換する
+
+○文字列型: convert(整数型の配列: arrayInput)
+  文字列型: stringOutput ← ""
+  整数型: i
+  for (iを1からarrayInputの要素数まで1ずつ増やす)
+    if (arrayInput[i]が1と等しい)
+      stringOutputの末尾に"A"を追加する
+    else
+      stringOutputの末尾に"B"を追加する
+    endif
+  endfor
+  return stringOutput

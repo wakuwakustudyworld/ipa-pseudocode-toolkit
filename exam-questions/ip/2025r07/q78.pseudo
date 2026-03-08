@@ -1,0 +1,13 @@
+// 出典: 令和7年度 ITパスポート試験 公開問題 問78
+// 正解: エ (9)
+// 概要: 1〜7のうち3の倍数の合計を求める
+
+○calcMod3()
+  整数型: totalValue, i
+  totalValue ← 0
+  for (iを1から7まで1ずつ増やす)
+    if (i÷3の余りが0と等しい)
+      totalValue ← totalValue + i
+    endif
+  endfor
+  totalValueを出力する

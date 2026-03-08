@@ -1,0 +1,13 @@
+// 出典: 令和6年度 ITパスポート試験 公開問題 問85
+// 正解: エ (a = 2の(i-1)乗, b = integerNum + digitNum × exponent)
+// 概要: 符号なし2進数文字列を整数に変換する関数
+
+○整数型: binaryToInteger(文字列型: binaryStr)
+  整数型: integerNum, digitNum, exponent, i
+  integerNum ← 0
+  for (iを1からbinaryStrの文字数まで1ずつ増やす)
+    digitNum ← binaryStrの末尾からi番目の文字を整数型に変換した値
+    exponent ← 2の(i − 1)乗
+    integerNum ← integerNum + digitNum × exponent
+  endfor
+  return integerNum

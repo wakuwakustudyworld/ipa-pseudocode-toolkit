@@ -1,0 +1,11 @@
+// 出典: 令和5年度 ITパスポート試験 公開問題 問64
+// 正解: ウ (a = calcX ← calcX + n)
+// 概要: 1からmaxまでの整数の総和を求める関数
+
+○整数型: sigma(整数型: max)
+  整数型: calcX ← 0
+  整数型: n
+  for (nを1からmaxまで1ずつ増やす)
+    calcX ← calcX ＋ n
+  endfor
+  return calcX

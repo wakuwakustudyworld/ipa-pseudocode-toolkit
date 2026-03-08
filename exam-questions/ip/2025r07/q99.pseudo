@@ -1,0 +1,21 @@
+// 出典: 令和7年度 ITパスポート試験 公開問題 問99
+// 正解: ウ (3,000円)
+// 概要: 改善額と短縮期間から賞金額を求める関数
+
+○整数型: calculateAmountOfPrize(整数型: improvement,
+                               整数型: period)
+  整数型: prize
+  if (improvementが100000より小さい)
+    if (periodが7より小さい)
+      prize ← 500
+    else
+      prize ← 1000
+    endif
+  else
+    if (periodが7より小さい)
+      prize ← 2000
+    else
+      prize ← 5000
+    endif
+  endif
+  return prize

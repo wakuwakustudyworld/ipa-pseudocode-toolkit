@@ -1,0 +1,15 @@
+// 出典: 令和4年度 ITパスポート試験 問78
+// 正解: イ (a = j ← k ＋ (j − 10 × k))
+// 概要: 9桁の整数の各桁を合計し、1桁になるまで繰り返してチェックデジットを求める
+
+○整数型: checkDigit(整数型の配列: originalDigit)
+  整数型: i, j, k
+  j ← 0
+  for (iを1からoriginalDigitの要素数まで1ずつ増やす)
+    j ← j ＋ originalDigit[i]
+  endfor
+  while (jが9より大きい)
+    k ← j ÷ 10の商
+    j ← k ＋ (j − 10 × k)
+  endwhile
+  return j

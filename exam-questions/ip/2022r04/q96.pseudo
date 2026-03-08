@@ -1,0 +1,19 @@
+// 出典: 令和4年度 ITパスポート試験 問96
+// 正解: エ (a = num + 2 × i, b = iを2から6まで2ずつ増やす)
+// 概要: 変数numの変化パターンから式とループ条件を特定する
+
+○整数型: calcX(整数型: inData)
+  整数型: num, i
+  num ← inData
+  for (iを1から3まで1ずつ増やす)
+    num ← num ＋ 2 × i
+  endfor
+  return num
+
+○整数型: calcY(整数型: inData)
+  整数型: num, i
+  num ← inData
+  for (iを2から6まで2ずつ増やす)
+    num ← num ＋ 2 × i
+  endfor
+  return num

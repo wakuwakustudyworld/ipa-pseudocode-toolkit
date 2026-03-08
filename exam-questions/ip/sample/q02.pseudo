@@ -1,0 +1,17 @@
+// 出典: ITパスポート試験 疑似言語サンプル問題 問2
+// 正解: エ (a = while (cntがnumより小さい), b = endwhile)
+// 概要: "☆"と"★"を交互にnum個出力する手続
+
+○printStars(整数型: num)
+  整数型: cnt ← 0
+  文字列型: starColor ← "SC1"
+  while (cntがnumより小さい)
+    if (starColorが"SC1"と等しい)
+      "☆"を出力する
+      starColor ← "SC2"
+    else
+      "★"を出力する
+      starColor ← "SC1"
+    endif
+    cntの値を1増やす
+  endwhile
