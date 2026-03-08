@@ -1,0 +1,82 @@
+// 出典: 令和6年秋 応用情報技術者試験 午後 問3
+// 正解: ア = N²
+//       イ = isPrime[d]がtrueと等しい
+//       ウ = t + d
+//       エ = isPrime[(d − 1) ÷ 2の商]がtrueと等しい
+//       オ = (t − 1) ÷ 2の商
+//       カ = t + 2 × d
+// 設問4: L1=171回, L2=13回, L3=2回
+// 概要: エラトステネスの篩による素数列挙アルゴリズム（3段階の改良）
+
+// === 図1: 関数prime1（単純な素数判定） ===
+
+○整数型の配列: prime1(整数型: N)
+  整数型の配列: primes ← {}
+  論理型: isPrime
+  整数型: d ← 2
+  整数型: t
+  while (dがN以下)
+    isPrime ← true
+    t ← 2
+    while (tがd未満)
+      if (d mod tが0と等しい)
+        isPrime ← false
+      endif
+      t ← t ＋ 1
+    endwhile
+    if (isPrimeがtrueと等しい)
+      primesの末尾にdの値を追加する
+    endif
+    d ← d ＋ 1
+  endwhile
+  return primes
+
+// === 図2: 関数prime2（エラトステネスの篩） ===
+
+○整数型の配列: prime2(整数型: N)
+  整数型の配列: primes ← {}
+  論理型の配列: isPrime ← {false}
+  整数型: c ← 2
+  整数型: d ← 2
+  整数型: t
+  while (cがN以下)
+    isPrimeの末尾にtrueを追加する
+    c ← c ＋ 1
+  endwhile
+  while (dがN以下)
+    if (isPrime[d]がtrueと等しい)
+      primesの末尾にdの値を追加する
+      t ← d × d
+      while (tがN以下)
+        isPrime[t] ← false
+        t ← t ＋ d
+      endwhile
+    endif
+    d ← d ＋ 1
+  endwhile
+  return primes
+
+// === 図3: 関数prime3（奇数のみ対象の改良版） ===
+
+○整数型の配列: prime3(整数型: N)
+  整数型の配列: primes ← {2}
+  論理型の配列: isPrime ← {}
+  整数型: c ← 3
+  整数型: d ← 3
+  整数型: t
+  while (cがN以下)
+    isPrimeの末尾にtrueを追加する
+    c ← c ＋ 2
+  endwhile
+  while (dがN以下)
+    if (isPrime[(d − 1) ÷ 2の商]がtrueと等しい)
+      primesの末尾にdの値を追加する
+      t ← d × d
+      while (tがN以下)
+        isPrime[(t − 1) ÷ 2の商] ← false
+        t ← t ＋ 2 × d
+      endwhile
+    endif
+    d ← d ＋ 2
+  endwhile
+  return primes

@@ -1,0 +1,49 @@
+// 出典: 令和6年春 応用情報技術者試験 午後 問3
+// 正解: イ = dist[k]がminDistより小さい
+//       ウ = dist[k]
+//       エ = dist[curNode] ＋ edge[curNode, k]
+//       オ = 26（dist[k]更新の直後にviaNode[k] ← curNodeを挿入）
+//       カ = viaNodeを
+// 概要: ダイクストラ法による最短距離の算出と最短経路の出力
+
+// === 図2: 関数distanceのプログラム（空欄を正解で埋めたもの） ===
+
+○整数型: distance()
+  整数型: N
+  整数型: INF
+  整数型の二次元配列: edge
+  整数型: GOAL
+  整数型の配列: dist
+  整数型の配列: done
+  整数型: curNode
+  整数型: minDist
+  整数型: k
+  整数型の配列: viaNode
+  整数型: j
+  dist[1] ← 0
+  while (true)
+    minDist ← INF
+    for (kを1からNまで1ずつ増やす)
+      if (done[k]が0と等しい かつ dist[k]がminDistより小さい)
+        minDist ← dist[k]
+        curNode ← k
+      endif
+    endfor
+    done[curNode] ← 1
+    if (curNodeがGOALと等しい)
+      // === 図4: 最短経路の出力（挿入箇所） ===
+      j ← GOAL
+      GOALを出力する
+      while (jが1より大きい)
+        viaNode[j]を出力する
+        j ← viaNode[j]
+      endwhile
+      return dist[curNode]
+    endif
+    for (kを1からNまで1ずつ増やす)
+      if (dist[curNode] ＋ edge[curNode, k]がdist[k]より小さい かつ done[k]が0と等しい)
+        dist[k] ← dist[curNode] ＋ edge[curNode, k]
+        viaNode[k] ← curNode
+      endif
+    endfor
+  endwhile

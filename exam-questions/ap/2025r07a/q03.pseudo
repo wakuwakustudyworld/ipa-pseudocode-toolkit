@@ -1,0 +1,34 @@
+// 出典: 令和7年秋 応用情報技術者試験 午後 問3
+// 正解: 設問1 = 4
+//       ア = 2
+//       イ = 4
+//       ウ = lcsl[n − 1, k − 1] ＋ 1
+//       エ = lcsl[n, k − 1]
+//       オ = lcsl[n − 1, k]
+//       カ = lcsl[s, t]
+//       キ = s × t
+// 概要: 動的計画法による最長共通部分列（LCS）の長さを求めるアルゴリズム
+
+○整数型: calculate_lcsl(文字型の配列: S, 文字型の配列: T)
+  整数型: s ← Sの要素数
+  整数型: t ← Tの要素数
+  整数型の二次元配列: lcsl ← {(s ＋ 1)行, (t ＋ 1)列の未定義の値}
+  整数型: n, k
+  for (nを0からsまで1ずつ増やす)
+    lcsl[n, 0] ← 0
+  endfor
+  for (kを0からtまで1ずつ増やす)
+    lcsl[0, k] ← 0
+  endfor
+  for (nを1からsまで1ずつ増やす)
+    for (kを1からtまで1ずつ増やす)
+      if (S[n − 1]がT[k − 1]と等しい)
+        lcsl[n, k] ← lcsl[n − 1, k − 1] ＋ 1
+      elseif (lcsl[n, k − 1]がlcsl[n − 1, k]より大きい)
+        lcsl[n, k] ← lcsl[n, k − 1]
+      else
+        lcsl[n, k] ← lcsl[n − 1, k]
+      endif
+    endfor
+  endfor
+  return lcsl[s, t]

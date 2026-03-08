@@ -1,0 +1,57 @@
+// 出典: 令和7年春 応用情報技術者試験 午後 問3
+// 正解: ア = explore_queue.isEmpty()
+//       イ = poll()
+//       ウ = direction[i][1]
+//       エ = board_size
+//       オ = direction[i][2]
+//       カ = checkGoal(new_state.board, goal_board)
+//       キ = add(new_state)
+//       ク = add(new_state.board)
+// 設問1: {{8, 6, 7}, {2, 9, 4}, {3, 5, 1}}
+// 概要: スライドパズルの最小解を幅優先探索で求めるプログラム
+
+○solveNPuzzle(整数型: board_size)
+  BoardState: start_state
+  整数型配列の配列: goal_board
+  整数型配列の配列: direction
+  Queue: explore_queue
+  List: check_list
+  BoardState: state
+  BoardState: new_state
+  整数型: change_num
+  整数型: i
+  start_state ← BoardState()
+  goal_board ← createGoal(board_size)
+  start_state.board ← createStart(board_size)
+  start_state.space ← getSpace(start_state.board)
+  direction ← {{1, 0}, {0, -1}, {-1, 0}, {0, 1}}
+  explore_queue ← Queue()
+  explore_queue.add(start_state)
+  check_list ← List()
+  check_list.add(start_state.board)
+  while (explore_queue.isEmpty()がfalseと等しい)
+    state ← explore_queue.poll()
+    for (iを1からdirectionの要素数まで1ずつ増やす)
+      if ((state.space[1] ＋ direction[i][1]が1以上) かつ
+          (state.space[1] ＋ direction[i][1]がboard_size以下) かつ
+          (state.space[2] ＋ direction[i][2]が1以上) かつ
+          (state.space[2] ＋ direction[i][2]がboard_size以下))
+        new_state ← BoardState(state)
+        new_state.space[1] ← state.space[1] ＋ direction[i][1]
+        new_state.space[2] ← state.space[2] ＋ direction[i][2]
+        change_num ← new_state.board[new_state.space[1]][new_state.space[2]]
+        new_state.board[new_state.space[1]][new_state.space[2]] ← board_size × board_size
+        new_state.board[state.space[1]][state.space[2]] ← change_num
+        if (checkGoal(new_state.board, goal_board)がtrueと等しい)
+          printResult(new_state)
+          return
+        endif
+        if (checkSameBoard(new_state.board, check_list)がfalseと等しい)
+          explore_queue.add(new_state)
+          check_list.add(new_state.board)
+        endif
+      endif
+    endfor
+  endwhile
+  ゴールの盤面に至る駒の移動方法がない旨のメッセージを出力する
+  return
