@@ -87,6 +87,9 @@ _SWAP_RE = re.compile(r"^(.+?)と(.+?)の値を入れ替える\s*$")
 _INCREMENT_RE = re.compile(r"^(.+?)の値を(\d+)(増やす|減らす)\s*$")
 _BREAK_RE = re.compile(r"^(?:(.+?)の行から始まる)?繰返し処理を終了する\s*$")
 _PRINT_RE = re.compile(r"^(.+?)を出力(?:する)?\s*$")
+_PRINT_ALL_RE = re.compile(
+    r"^(.+?)の全(?:て)?の?要素(?:の値)?を(?:先頭から)?(?:要素番号の)?順に(.+?)区切りで出力する\s*$"
+)
 _PRINT_MULTI_RE = re.compile(
     r"^(.+?)の値と(.+?)の値をこの順に(.+?)区切りで出力する\s*$"
 )
@@ -101,7 +104,11 @@ _JP_COND_IKA = re.compile(r"^(.+?)\s*が\s*(.+?)\s*以下\s*$")
 _JP_COND_IJOU = re.compile(r"^(.+?)\s*が\s*(.+?)\s*以上\s*$")
 _JP_COND_YORI_SMALL = re.compile(r"^(.+?)\s*が\s*(.+?)\s*より小さい\s*$")
 _JP_COND_YORI_BIG = re.compile(r"^(.+?)\s*が\s*(.+?)\s*より大きい\s*$")
+_JP_COND_MIMAN = re.compile(r"^(.+?)\s*が\s*(.+?)\s*未満\s*$")
 _JP_COND_DENAI = re.compile(r"^(.+?)\s*が\s*(.+?)\s*でない\s*$")
+_JP_COND_ANY_EQUAL = re.compile(
+    r"^(.+?)のいずれかの要素の値が(.+?)(?:の値)?と等しい\s*$"
+)
 
 
 def parse(source: str) -> Program:
@@ -182,9 +189,14 @@ class Parser:
             i += 1
         return line
 
-    @staticmethod
-    def _join_continuation_lines(lines: list[str]) -> list[str]:
-        """波括弧・丸括弧が閉じていない行を次の行と結合する"""
+    # 行末に二項演算子・日本語助詞・連体形がある場合に次の行と結合する
+    _TRAILING_OP_RE = re.compile(
+        r"(?:[＋＋\-−－×÷＝≠＜＞≦≧+\-*/]|を|の|から|ある|した)$"
+    )
+
+    @classmethod
+    def _join_continuation_lines(cls, lines: list[str]) -> list[str]:
+        """波括弧・丸括弧が閉じていない行、または行末が演算子の行を次の行と結合する"""
         result: list[str] = []
         buffer = ""
         brace_depth = 0
@@ -203,7 +215,12 @@ class Parser:
                     paren_depth += 1
                 elif ch == ')':
                     paren_depth -= 1
-            if brace_depth <= 0 and paren_depth <= 0:
+            needs_continuation = (
+                brace_depth > 0
+                or paren_depth > 0
+                or cls._TRAILING_OP_RE.search(buffer.rstrip())
+            )
+            if not needs_continuation:
                 result.append(buffer)
                 buffer = ""
                 brace_depth = 0
@@ -360,6 +377,13 @@ class Parser:
         if m := _BREAK_RE.match(line):
             self._advance_line()
             return BreakStatement(label=m.group(1))
+        if m := _PRINT_ALL_RE.match(line):
+            self._advance_line()
+            return PrintStatement(
+                values=[self._parse_expression(m.group(1))],
+                separator=m.group(2),
+                print_all=True,
+            )
         if m := _PRINT_MULTI_RE.match(line):
             self._advance_line()
             return PrintStatement(
@@ -564,9 +588,17 @@ class Parser:
         # 形式的な式として解析
         return self._parse_expression(text)
 
+    # かつ/または → and/or マッピング
+    _COMPOUND_KEYWORDS: list[tuple[str, str]] = [
+        (" and ", "and"),
+        (" or ", "or"),
+        (" かつ ", "and"),
+        (" または ", "or"),
+    ]
+
     def _split_compound_condition(self, text: str) -> tuple[str, str, str] | None:
-        """and/or でトップレベル分割を試みる"""
-        for keyword in (" and ", " or "):
+        """and/or/かつ/または でトップレベル分割を試みる"""
+        for keyword, op in self._COMPOUND_KEYWORDS:
             depth = 0
             i = 0
             while i < len(text):
@@ -578,7 +610,6 @@ class Parser:
                 elif depth == 0 and text[i : i + len(keyword)] == keyword:
                     left = text[:i].strip()
                     right = text[i + len(keyword) :].strip()
-                    op = keyword.strip()
                     return (op, left, right)
                 i += 1
         return None
@@ -618,6 +649,16 @@ class Parser:
                 ),
                 right=IntegerLiteral(value=0),
             )
+        # 存在量化: Xのいずれかの要素の値がYと等しい → any(e == Y for e in X)
+        # _JP_COND_EQUAL より先に判定する（「が」で分割される前にマッチさせるため）
+        if m := _JP_COND_ANY_EQUAL.match(text):
+            return FunctionCall(
+                function=Identifier(name="any_equal"),
+                arguments=[
+                    self._parse_expression(m.group(1)),
+                    self._parse_expression(m.group(2)),
+                ],
+            )
         if m := _JP_COND_NOT_EQUAL.match(text):
             return BinaryOp(
                 op="!=",
@@ -639,6 +680,12 @@ class Parser:
         if m := _JP_COND_IJOU.match(text):
             return BinaryOp(
                 op=">=",
+                left=self._parse_expression(m.group(1)),
+                right=self._parse_expression(m.group(2)),
+            )
+        if m := _JP_COND_MIMAN.match(text):
+            return BinaryOp(
+                op="<",
                 left=self._parse_expression(m.group(1)),
                 right=self._parse_expression(m.group(2)),
             )
@@ -666,7 +713,29 @@ class Parser:
 
     # 動的配列初期化パターン
     _DYN_ARRAY_1D_RE = re.compile(r"^\{(.+?)個の\s*(.+?)\s*\}$")
-    _DYN_ARRAY_2D_RE = re.compile(r"^\{(.+?)行(.+?)列の\s*(.+?)\s*\}$")
+    _DYN_ARRAY_2D_RE = re.compile(r"^\{(.+?)行[,、]?\s*(.+?)列の\s*(.+?)\s*\}$")
+
+    # Tier 2: 逆順文字アクセス + 型変換
+    _REVERSE_CHAR_INT_RE = re.compile(
+        r"^(.+?)の末尾から(.+?)番目の文字を整数型に変換した値$"
+    )
+    _REVERSE_CHAR_RE = re.compile(r"^(.+?)の末尾から(.+?)番目の文字$")
+
+    # Tier 2: 式による累乗 Xの(expr)乗
+    _POWER_EXPR_RE = re.compile(r"^(.+?)の\((.+?)\)乗$")
+
+    # Tier 2: 集約 Xの要素の和
+    _SUM_ALL_RE = re.compile(r"^(.+?)の要素の和$")
+    _SUM_ROW_RE = re.compile(r"^(.+?)の行番号(.+?)の要素の和$")
+    _SUM_COL_RE = re.compile(r"^(.+?)の列番号(.+?)の要素の和$")
+
+    # Tier 3: 集合操作パターン
+    _UNIQUE_SORTED_RE = re.compile(
+        r"^(.+?)に含まれる文字列を\s*重複なく辞書順に格納した配列$"
+    )
+    _FILTER_EXCLUDE_RE = re.compile(
+        r"^(.+?)の複製から値が(.+?)である\s*要素を除いた配列$"
+    )
 
     def _parse_expression(self, text: str) -> Expression:
         """テキストから式をパースする"""
@@ -677,7 +746,7 @@ class Parser:
         # 特殊リテラル
         if text == "未定義の値" or text == "未定義":
             return UndefinedLiteral()
-        if text == "−∞" or text == "-∞":
+        if text in ("−∞", "-∞", "－∞"):  # U+2212, ASCII, U+FF0D
             return NegativeInfinity()
 
         # 動的配列初期化: {n行m列のX}
@@ -693,6 +762,87 @@ class Parser:
             return DynamicArrayInit(
                 size_expr=self._parse_expression(m.group(1)),
                 init_value=self._parse_expression(m.group(2)),
+            )
+
+        # Tier 2: 逆順文字アクセス + 整数変換
+        # Xの末尾からi番目の文字を整数型に変換した値 → int(X[-i])
+        if m := self._REVERSE_CHAR_INT_RE.match(text):
+            return FunctionCall(
+                function=Identifier(name="int"),
+                arguments=[
+                    ArrayAccess(
+                        array=self._parse_expression(m.group(1)),
+                        indices=[
+                            UnaryOp(
+                                op="-",
+                                operand=self._parse_expression(m.group(2)),
+                            )
+                        ],
+                    )
+                ],
+            )
+
+        # Tier 2: 逆順文字アクセス
+        # Xの末尾からi番目の文字 → X[-i]
+        if m := self._REVERSE_CHAR_RE.match(text):
+            return ArrayAccess(
+                array=self._parse_expression(m.group(1)),
+                indices=[
+                    UnaryOp(op="-", operand=self._parse_expression(m.group(2)))
+                ],
+            )
+
+        # Tier 2: 式による累乗 Xの(expr)乗 → X ** (expr)
+        if m := self._POWER_EXPR_RE.match(text):
+            return BinaryOp(
+                op="**",
+                left=self._parse_expression(m.group(1)),
+                right=self._parse_expression(m.group(2)),
+            )
+
+        # Tier 3: 集合操作パターン
+        # Xに含まれる文字列を重複なく辞書順に格納した配列
+        # → sorted(set(s for sub in X for s in sub))
+        if m := self._UNIQUE_SORTED_RE.match(text):
+            return FunctionCall(
+                function=Identifier(name="unique_sorted"),
+                arguments=[self._parse_expression(m.group(1))],
+            )
+        # Xの複製から値がYである要素を除いた配列
+        # → [x for x in X if x != Y]
+        if m := self._FILTER_EXCLUDE_RE.match(text):
+            return FunctionCall(
+                function=Identifier(name="filter_exclude"),
+                arguments=[
+                    self._parse_expression(m.group(1)),
+                    self._parse_expression(m.group(2)),
+                ],
+            )
+
+        # Tier 2: 集約パターン
+        # Xの行番号Yの要素の和 → sum(X.row(Y))  → FunctionCall
+        if m := self._SUM_ROW_RE.match(text):
+            return FunctionCall(
+                function=Identifier(name="sum_row"),
+                arguments=[
+                    self._parse_expression(m.group(1)),
+                    self._parse_expression(m.group(2)),
+                ],
+            )
+        # Xの列番号Yの要素の和 → sum(X.col(Y))  → FunctionCall
+        if m := self._SUM_COL_RE.match(text):
+            return FunctionCall(
+                function=Identifier(name="sum_col"),
+                arguments=[
+                    self._parse_expression(m.group(1)),
+                    self._parse_expression(m.group(2)),
+                ],
+            )
+        # Xの要素の和 → sum(X)
+        if m := self._SUM_ALL_RE.match(text):
+            return FunctionCall(
+                function=Identifier(name="sum"),
+                arguments=[self._parse_expression(m.group(1))],
             )
 
         # トークン化してPrattパーサーで解析
@@ -875,6 +1025,14 @@ class ExpressionParser:
             if name in ("未定義の値", "未定義"):
                 return UndefinedLiteral()
 
+            # 文字→文字列変換: c1の1文字だけから成る文字列 → str(c1)
+            m = re.match(r"^(.+?)の\d+文字だけから成る文字列$", name)
+            if m:
+                return FunctionCall(
+                    function=Identifier(name="str"),
+                    arguments=[self._parser._parse_expression(m.group(1))],
+                )
+
             # CharAtパターン: Xのi文字目の文字
             m = re.match(r"^(.+?)の(.+?)文字目の文字$", name)
             if m:
@@ -913,6 +1071,32 @@ class ExpressionParser:
                     op="**",
                     left=self._parser._parse_expression(m.group(1)),
                     right=IntegerLiteral(value=int(m.group(2))),
+                )
+
+            # Tier 2: 集約パターン（識別子トークン内）
+            m = re.match(r"^(.+?)の行番号(.+?)の要素の和$", name)
+            if m:
+                return FunctionCall(
+                    function=Identifier(name="sum_row"),
+                    arguments=[
+                        self._parser._parse_expression(m.group(1)),
+                        self._parser._parse_expression(m.group(2)),
+                    ],
+                )
+            m = re.match(r"^(.+?)の列番号(.+?)の要素の和$", name)
+            if m:
+                return FunctionCall(
+                    function=Identifier(name="sum_col"),
+                    arguments=[
+                        self._parser._parse_expression(m.group(1)),
+                        self._parser._parse_expression(m.group(2)),
+                    ],
+                )
+            m = re.match(r"^(.+?)の要素の和$", name)
+            if m:
+                return FunctionCall(
+                    function=Identifier(name="sum"),
+                    arguments=[self._parser._parse_expression(m.group(1))],
                 )
 
             # 日本語プロパティパターン: Xの要素数, Xの文字数, Xの行数, Xの列数

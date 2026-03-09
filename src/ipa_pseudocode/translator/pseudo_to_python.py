@@ -67,6 +67,7 @@ class PseudoToPythonTranslator:
         self._global_names: set[str] = set()
         self._uses_array: bool = False
         self._uses_array2d: bool = False
+        self._string_vars: set[str] = set()  # 文字列型と宣言された変数名
 
     def translate(self, program: Program) -> str:
         """プログラム全体を変換する"""
@@ -196,6 +197,9 @@ class PseudoToPythonTranslator:
             self._builder.add_line(self._expr(stmt.expression))
 
     def _translate_var_decl(self, decl: VarDecl) -> None:
+        # 文字列型の変数を追跡（P3: append → += 分岐用）
+        if "文字列" in decl.type_annotation:
+            self._string_vars.update(decl.names)
         names = [self._safe_name(n) for n in decl.names]
         if decl.initializer:
             init = self._expr(decl.initializer)
@@ -311,12 +315,19 @@ class PseudoToPythonTranslator:
 
     def _translate_print(self, stmt: PrintStatement) -> None:
         values = ", ".join(self._expr(v) for v in stmt.values)
+        sep_kwarg = ""
         if stmt.separator == "コンマ" or stmt.separator == "カンマ":
-            self._builder.add_line(f'print({values}, sep=",")')
+            sep_kwarg = ', sep=","'
         elif stmt.separator == "空白":
-            self._builder.add_line(f'print({values}, sep=" ")')
+            sep_kwarg = ', sep=" "'
         elif stmt.separator:
-            self._builder.add_line(f'print({values}, sep="{stmt.separator}")')
+            sep_kwarg = f', sep="{stmt.separator}"'
+
+        if stmt.print_all:
+            # 全要素出力: print(*arr, sep=sep)
+            self._builder.add_line(f"print(*{values}{sep_kwarg})")
+        elif sep_kwarg:
+            self._builder.add_line(f"print({values}{sep_kwarg})")
         else:
             self._builder.add_line(f"print({values})")
 
@@ -328,7 +339,12 @@ class PseudoToPythonTranslator:
     def _translate_append(self, stmt: AppendStatement) -> None:
         target = self._expr(stmt.target)
         value = self._expr(stmt.value)
-        self._builder.add_line(f"{target}.append({value})")
+        # P3: 文字列型の変数に対する末尾追加は += を使用
+        target_name = self._get_assignment_target_name(stmt.target)
+        if target_name in self._string_vars:
+            self._builder.add_line(f"{target} += {value}")
+        else:
+            self._builder.add_line(f"{target}.append({value})")
 
     def _translate_increment(self, stmt: IncrementStatement) -> None:
         target = self._expr(stmt.target)
@@ -391,6 +407,26 @@ class PseudoToPythonTranslator:
             return f"{obj}.{expr.member}"
         if isinstance(expr, FunctionCall):
             func = self._expr(expr.function)
+            # Tier 2: 特殊関数のコード生成
+            if func == "any_equal" and len(expr.arguments) == 2:
+                collection = self._expr(expr.arguments[0])
+                value = self._expr(expr.arguments[1])
+                return f"any(e == {value} for e in {collection})"
+            if func == "sum_row" and len(expr.arguments) == 2:
+                arr = self._expr(expr.arguments[0])
+                idx = self._expr(expr.arguments[1])
+                return f"sum({arr}.row({idx}))"
+            if func == "unique_sorted" and len(expr.arguments) == 1:
+                collection = self._expr(expr.arguments[0])
+                return f"sorted(set(s for sub in {collection} for s in sub))"
+            if func == "filter_exclude" and len(expr.arguments) == 2:
+                source = self._expr(expr.arguments[0])
+                exclude = self._expr(expr.arguments[1])
+                return f"[x for x in {source} if x != {exclude}]"
+            if func == "sum_col" and len(expr.arguments) == 2:
+                arr = self._expr(expr.arguments[0])
+                idx = self._expr(expr.arguments[1])
+                return f"sum({arr}.col({idx}))"
             args = ", ".join(self._expr(a) for a in expr.arguments)
             return f"{func}({args})"
         if isinstance(expr, BinaryOp):

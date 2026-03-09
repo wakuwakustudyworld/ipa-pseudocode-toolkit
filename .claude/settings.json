@@ -3,7 +3,9 @@
     "allow": [
       "Bash(python -c \":*)",
       "Bash(python /Users/mizuki/research/question-generate/ipa-pseudocode-toolkit/exam-questions/ap/2024r06-autumn/q03.py)",
-      "Bash(python /Users/mizuki/research/question-generate/ipa-pseudocode-toolkit/exam-questions/ap/2025r07a/q03.py)"
+      "Bash(python /Users/mizuki/research/question-generate/ipa-pseudocode-toolkit/exam-questions/ap/2025r07a/q03.py)",
+      "Bash(python -m pytest tests/ -x -q)",
+      "Bash(python -m pytest tests/test_translator.py -x -q)"
     ]
   }
 }

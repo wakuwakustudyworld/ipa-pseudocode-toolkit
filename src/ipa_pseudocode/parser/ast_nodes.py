@@ -260,6 +260,7 @@ class PrintStatement(ASTNode):
 
     values: list[Expression] = field(default_factory=list)
     separator: str = ""
+    print_all: bool = False  # 全要素出力: print(*arr, sep=sep)
 
 
 @dataclass
