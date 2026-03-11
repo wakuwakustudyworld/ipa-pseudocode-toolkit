@@ -377,7 +377,7 @@ src/ipa_pseudocode/
 | Phase 2 | executor（擬似言語の直接実行）+ trace | 完了 |
 | Phase 3 | Python→擬似言語の逆変換 | 完了 |
 | Phase 4 | 変換精度改善（78%→100%）+ docs整備 + exam-questions充実 | 完了 |
-| Phase 5 | PyPI公開 | 未着手 |
+| Phase 5 | PyPI公開 | 完了 |
 
 ## ライセンス
 

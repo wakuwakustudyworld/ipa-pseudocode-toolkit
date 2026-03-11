@@ -4,10 +4,10 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ipa-pseudocode-toolkit"
-version = "0.1.0"
+version = "0.3.0"
 description = "情報処理技術者試験（ITパスポート試験・基本情報技術者試験・応用情報技術者試験）の擬似言語を解析・変換・実行・トレースするPythonツールキット"
 readme = "README.md"
-license = "MIT"
+license = {text = "MIT"}
 requires-python = ">=3.10"
 authors = [
     { name = "Wakuwaku Study World Co., Ltd." },
